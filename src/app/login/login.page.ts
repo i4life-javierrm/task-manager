@@ -27,4 +27,7 @@ export class LoginPage {
   this.router.navigate(['/home']);  
   }); 
   } 
+  register(){
+    this.authService.register(this.username,this.password)
+  }
   }

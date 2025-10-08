@@ -16,7 +16,14 @@ path: 'login',
 loadChildren: () => 
 import('./login/login.module').then(m => 
 m.LoginPageModule)  
-} 
+},
+{
+  path: 'register',
+  loadChildren: () =>
+    import('./register/register.page').then(m =>
+      m.RegisterPage
+    )
+}
 ];
 
 @NgModule({

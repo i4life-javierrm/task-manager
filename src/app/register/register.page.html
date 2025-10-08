@@ -1,0 +1,38 @@
+<ion-header [translucent]="true">
+    <ion-toolbar>
+      <ion-title>Registrarse</ion-title>
+    </ion-toolbar>
+  </ion-header>
+  
+  <ion-content class="ion-padding form-container">
+    <ion-item>
+      <ion-input
+        [(ngModel)]="username"
+        placeholder="Usuario"
+      ></ion-input>
+    </ion-item>
+  
+    <ion-item>
+      <ion-input
+        [(ngModel)]="password"
+        type="password"
+        placeholder="Contraseña"
+      ></ion-input>
+    </ion-item>
+  
+    <ion-button
+      expand="full"
+      (click)="register()"
+    >
+      Registrar
+    </ion-button>
+  
+    <ion-button
+      expand="full"
+      fill="clear"
+      color="primary"
+      (click)="goToLogin()"
+    >
+      ¿Ya tienes una cuenta? Iniciar sesión
+    </ion-button>
+  </ion-content>

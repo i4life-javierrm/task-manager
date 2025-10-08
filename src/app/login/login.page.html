@@ -5,7 +5,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
+<ion-content class="ion-padding form-container">
   <ion-item>
     <ion-input
       [(ngModel)]="username"
@@ -27,11 +27,15 @@
   >
     Ingresar
   </ion-button>
+  
   <ion-button
     expand="full"
-    (click)="register()"
+    fill="clear"
+    color="primary"
+    (click)="goToRegister()"
   >
-    Registrar
+    ¿No tienes una cuenta? Registrar
   </ion-button>
+
 </ion-content>
 </html>

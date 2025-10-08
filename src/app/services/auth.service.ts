@@ -9,7 +9,7 @@ import { Router } from '@angular/router';
   providedIn: 'root' 
 }) 
 export class AuthService { 
-  private apiUrl = environment.apiUrl + '/tasks'; 
+  private apiUrl = environment.apiUrl; 
   private authState = new BehaviorSubject<boolean>(this.hasToken()); 
  
   constructor(private http: HttpClient, private router: Router) {} 

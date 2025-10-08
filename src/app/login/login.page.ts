@@ -28,6 +28,9 @@ export class LoginPage {
   }); 
   } 
   register(){
-    this.authService.register(this.username,this.password)
+    this.authService.register(this.username, 
+      this.password).subscribe(() => { 
+      this.router.navigate(['/login']);  
+      }); 
   }
   }

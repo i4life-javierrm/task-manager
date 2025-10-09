@@ -4,40 +4,46 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
-  <ion-grid class="center-content">
-    <ion-row class="ion-justify-content-center">
-      
-      <ion-col size-xs="12" size-md="4" class="auth-form-column">
-        
-        <div>
-          <ion-item class="ion-no-padding">
-            <ion-input [(ngModel)]="username" placeholder="Usuario" />
-          </ion-item>
+<ion-content class="facebook-background">
+  <div class="login-container">
+    <ion-card class="login-box">
+      <ion-card-content>
+        <ion-item class="input-item">
+          <ion-input
+            [(ngModel)]="username"
+            placeholder="Correo electrónico"
+          />
+        </ion-item>
 
-          <ion-item class="ion-no-padding">
-            <ion-input
-              [(ngModel)]="password"
-              type="password"
-              placeholder="Contraseña"
-            />
-          </ion-item>
-          
-          <ion-button size="large" expand="full" (click)="login()">
-            Ingresar
-          </ion-button>
-          
+        <ion-item class="input-item">
+          <ion-input
+            [(ngModel)]="password"
+            type="password"
+            placeholder="Contraseña"
+          />
+        </ion-item>
+
+        <ion-button expand="full" color="primary" class="login-button" (click)="login()">
+          Iniciar sesión
+        </ion-button>
+
+        <!--<p class="forgot-password-link">
+          <a href="#">¿Olvidaste tu contraseña?</a>
+        </p>-->
+
+        <div class="divider"></div>
+
+        <div class="create-account-button-wrapper">
           <ion-button
-            expand="full"
-            fill="clear"
-            color="primary"
+            expand="block"
+            _color="success"
+            class="create-account-button"
             (click)="goToRegister()"
           >
-            ¿No tienes una cuenta? Registrar
+            Crear cuenta nueva
           </ion-button>
-          
         </div>
-      </ion-col>
-    </ion-row>
-  </ion-grid>
+      </ion-card-content>
+    </ion-card>
+  </div>
 </ion-content>

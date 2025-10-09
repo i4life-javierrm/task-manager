@@ -1,37 +1,72 @@
-<html>
 <ion-header [translucent]="true">
   <ion-toolbar>
     <ion-title>
       Gestor de Tareas
     </ion-title>
-    <ion-buttons slot="end">   
-      <ion-button (click)="logout()">Cerrar sesión</ion-button>   
-      </ion-buttons>
+    <ion-buttons slot="end">
+      <ion-button (click)="logout()" fill="clear" color="medium">
+        <ion-icon name="log-out-outline" slot="start"></ion-icon>
+        Cerrar sesión
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding" [fullscreen]="true">
+<ion-content class="ion-padding facebook-background" [fullscreen]="true">
+
+  <ion-list-header class="ion-margin-top">
+    <ion-label>Añadir Nueva Tarea</ion-label>
+  </ion-list-header>
+
   <ion-item>
-    <ion-input [(ngModel)]="newTaskTitle" placeholder="Nueva tarea"></ion-input>
-    <ion-button (click)="addTask()">Añadir</ion-button>
+    <ion-input 
+      label="Título de la tarea"
+      label-placement="floating"
+      [(ngModel)]="newTaskTitle" 
+      placeholder="Escriba aquí..."
+    ></ion-input>
+    
+    <ion-button 
+      slot="end" 
+      shape="round" 
+      (click)="addTask()"
+      [disabled]="!newTaskTitle"
+    >
+      <ion-icon name="add"></ion-icon>
+    </ion-button>
   </ion-item>
 
-  <ion-list>
-    <ion-item *ngFor="let task of tasks">
-      <ion-label [class.completed]="task.completed">
-        {{ task.title }}
-      </ion-label>
+  <ion-list class="ion-margin-top">
+    <ion-list-header>
+      <ion-label>Tareas Pendientes</ion-label>
+    </ion-list-header>
 
-      <ion-checkbox
-        slot="end"
-        [(ngModel)]="task.completed"
-        (ionChange)="toggleTask(task)"
-      ></ion-checkbox>
+    <ion-card *ngFor="let task of tasks" class="task-card">
+      <ion-item lines="none">
+        
+        <ion-label 
+          class="ion-text-wrap" 
+          [class.completed]="task.completed"
+        >
+          <h2>{{ task.title }}</h2>
+        </ion-label>
 
-      <ion-button color="danger" fill="clear" (click)="deleteTask(task)">
-        <ion-icon name="trash"></ion-icon>
-      </ion-button>
-    </ion-item>
+        <ion-checkbox
+          slot="end"
+          class="ion-margin-end"
+          [(ngModel)]="task.completed"
+          (ionChange)="toggleTask(task)"
+        ></ion-checkbox>
+        
+        <ion-button 
+          slot="end" 
+          color="danger" 
+          fill="clear" 
+          (click)="deleteTask(task)"
+        >
+          <ion-icon name="trash"></ion-icon>
+        </ion-button>
+      </ion-item>
+    </ion-card>
   </ion-list>
 </ion-content>
-</html>

@@ -1,32 +1,82 @@
-#container {
-  text-align: center;
+/* home.page.scss */
 
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
+.completed {
+  text-decoration: line-through;
+  color: var(--ion-color-medium);
 }
 
-#container strong {
-  font-size: 20px;
-  line-height: 26px;
+/* home.page.scss */
+
+.completed {
+  text-decoration: line-through;
+  color: var(--ion-color-medium);
 }
 
-#container p {
-  font-size: 16px;
-  line-height: 22px;
-
-  color: #8c8c8c;
-
-  margin: 0;
+ion-list {
+  --background: transparent;
+  --border-radius: 0;
+  --border-width: 0;
+  --box-shadow: none;
+  padding: 0; 
+  margin: 0; 
+  /* Crucially, set a bottom margin to make the task cards float correctly */
+  margin-bottom: 20px; 
 }
 
-#container a {
-  text-decoration: none;
+ion-list-header {
+    /* Ensure the header itself doesn't have a background or border that could cause a line */
+    --background: transparent;
+    --border-width: 0;
+    
+    font-size: 1.2em;
+    font-weight: bold;
+    color: var(--ion-color-dark);
+    
+    /* Since we removed ion-list padding, add margin back to the header for spacing */
+    margin-bottom: 5px; 
 }
 
-.completed { 
-  text-decoration: line-through; 
-  color: gray; 
+.task-card {
+  margin-left: 0;
+  margin-right: 0;
+  /* Make sure the bottom margin is slightly larger to push away from any lingering list borders/shadows */
+  margin-bottom: 15px; 
+  
+  background: white; 
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); 
+  border-radius: 8px;
+
+  /* Explicitly target the last card and remove its bottom margin */
+  &:last-of-type {
+    margin-bottom: 0; 
   }
+
+  // Ensure the ion-item inside the card is clean
+  ion-item {
+    --padding-start: 0;
+    --inner-padding-end: 0;
+    --inner-padding-start: 16px; // Add padding back inside the item
+
+    h2 {
+        font-weight: 500;
+        font-size: 1.1em;
+    }
+  }
+}
+
+ion-list-header {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: var(--ion-color-dark);
+}
+
+ion-list-header {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: var(--ion-color-dark);
+}
+
+ion-content {
+  max-width: 40%;
+  align-self: center;
+}

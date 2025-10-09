@@ -36,7 +36,122 @@
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import "@ionic/angular/css/palettes/dark.system.css";
 
-/**/
+
+
+
+
+// --------------------------------------------------------
+// FACEBOOK-LIKE LOGIN STYLES
+// --------------------------------------------------------
+
+// Global background color for auth pages
+.facebook-background {
+    --background: #f0f2f5;
+}
+
+// Container to center the box both horizontally and vertically
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%; 
+    padding: 20px;
+}
+
+.login-box {
+    width: 100%;
+    max-width: 396px; // Standard Facebook login box width
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.1); 
+    border-radius: 8px;
+    margin: 0; // Remove default ion-card margins
+}
+
+// Custom style for inputs to look like Facebook's
+.input-item {
+    --padding-start: 14px;
+    --inner-padding-end: 14px;
+    --inner-padding-top: 10px;
+    --inner-padding-bottom: 10px;
+    margin-bottom: 12px;
+    border: 1px solid #dddfe2;
+    border-radius: 6px;
+    --background: #ffffff;
+    --highlight-color-focused: #1877f2; // Facebook blue focus
+    
+    // Set a good height for the input fields
+    ion-input {
+        min-height: 48px;
+        font-size: 17px;
+    }
+}
+
+// Primary Login Button (Blue)
+.login-button {
+    height: 48px; 
+    font-size: 17px;
+    font-weight: bold;
+    margin-top: 15px;
+    text-transform: capitalize; // Don't force uppercase
+}
+
+// Forgot Password Link
+.forgot-password-link {
+    text-align: center;
+    margin-top: 10px;
+    margin-bottom: 15px;
+
+    a {
+        color: var(--ion-color-primary, #1877f2); 
+        text-decoration: none;
+        font-size: 14px;
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}
+
+// Divider line
+.divider {
+    border-bottom: 1px solid #dadde1;
+    margin: 20px 0;
+}
+
+// Wrapper for the green button to center it
+.create-account-button-wrapper {
+    text-align: center;
+}
+
+// Create Account Button (Green)
+.create-account-button {
+    --background: #42b72a; // Facebook's green
+    --background-activated: #36a420;
+    height: 48px;
+    font-size: 17px;
+    --color:#fff;
+    text-transform: capitalize;
+    font-weight: bold;
+    //max-width: 200px; // Make it narrower
+    margin: 0 auto; // Center the button within its wrapper
+}
+
+// Standard Link Button (for "Already have an account?" text)
+.link-button {
+    --padding-start: 0;
+    --padding-end: 0;
+    font-size: 14px;
+    font-weight: normal;
+    text-transform: none;
+    height: auto; // Allow button height to adjust to text
+    margin-top: 10px;
+}
+
+
+
+
+
+
+
+/*
 
 .center-content {
     height: 100%; 
@@ -99,3 +214,5 @@
     display: grid;
     // Removed 'place-items: center' as requested
 }
+    
+    */

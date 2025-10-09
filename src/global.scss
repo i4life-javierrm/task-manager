@@ -35,3 +35,67 @@
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import "@ionic/angular/css/palettes/dark.system.css";
+
+/**/
+
+.center-content {
+    height: 100%; 
+    // Apply flexbox to the ion-grid
+    display: flex;
+    // Align content vertically to the center
+    align-items: center; 
+    // Optional: Align content horizontally (redundant with ion-justify-content-center on ion-row, but safer)
+    //justify-content: center;
+}
+
+// --------------------------------------------------------
+// 1. STYLES FOR THE AUTH FORM COLUMN CONTAINER
+// --------------------------------------------------------
+.auth-form-column {
+    // Add Ionic's built-in padding for top/bottom spacing on the form block
+    padding-top: var(--ion-padding-vertical);
+    padding-bottom: var(--ion-padding-vertical);
+    text-align: center; 
+    
+    // Set the inner <div> to have a defined layout to manage spacing
+    > div {
+        display: flex;
+        flex-direction: column;
+        
+        // This makes the entire form block sit closer to the center if there's 
+        // a lot of space, preventing the "clumped at the top" look.
+        justify-content: center; 
+    }
+    
+    // --------------------------------------------------------
+    // 3. SPACING BETWEEN COMPONENTS
+    // --------------------------------------------------------
+    
+    // Apply a bottom margin to every element (ion-item and ion-button)
+    // inside the form wrapper. We'll use a larger margin for clearer separation.
+    > div > * {
+        margin-bottom: var(--ion-margin-md, 16px); // Use medium margin for better spacing
+        
+        // Remove the margin from the very last element (the "Register" button)
+        &:last-child {
+            margin-bottom: 0;
+        }
+    }
+    
+    // Optional: Target the secondary button specifically to add a small gap above it
+    ion-button[fill="clear"] {
+        margin-top: var(--ion-margin-sm, 8px); 
+    }
+}
+
+// --------------------------------------------------------
+// 3. GLOBAL-LEVEL STYLES (Keep only what's necessary)
+// --------------------------------------------------------
+
+// This style is required to vertically center the whole grid in the ion-content
+// and should ideally be in a global file or the component's SCSS if used only here.
+.center-content {
+    height: 100%; 
+    display: grid;
+    // Removed 'place-items: center' as requested
+}

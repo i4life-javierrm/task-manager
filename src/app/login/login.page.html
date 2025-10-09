@@ -1,4 +1,3 @@
-
 <ion-header [translucent]="true">
   <ion-toolbar>
     <ion-title>Iniciar sesión</ion-title>
@@ -6,36 +5,39 @@
 </ion-header>
 
 <ion-content class="ion-padding">
-  <div class="form-container">
-  <ion-item>
-    <ion-input
-      [(ngModel)]="username"
-      placeholder="Usuario"
-    ></ion-input>
-  </ion-item>
+  <ion-grid class="center-content">
+    <ion-row class="ion-justify-content-center">
+      
+      <ion-col size-xs="12" size-md="4" class="auth-form-column">
+        
+        <div>
+          <ion-item class="ion-no-padding">
+            <ion-input [(ngModel)]="username" placeholder="Usuario" />
+          </ion-item>
 
-  <ion-item>
-    <ion-input
-      [(ngModel)]="password"
-      type="password"
-      placeholder="Contraseña"
-    ></ion-input>
-  </ion-item>
-
-  <ion-button
-    expand="full"
-    (click)="login()"
-  >
-    Ingresar
-  </ion-button>
-  
-  <ion-button
-    expand="full"
-    fill="clear"
-    color="primary"
-    (click)="goToRegister()"
-  >
-    ¿No tienes una cuenta? Registrar
-  </ion-button>
-  </div>
+          <ion-item class="ion-no-padding">
+            <ion-input
+              [(ngModel)]="password"
+              type="password"
+              placeholder="Contraseña"
+            />
+          </ion-item>
+          
+          <ion-button size="large" expand="full" (click)="login()">
+            Ingresar
+          </ion-button>
+          
+          <ion-button
+            expand="full"
+            fill="clear"
+            color="primary"
+            (click)="goToRegister()"
+          >
+            ¿No tienes una cuenta? Registrar
+          </ion-button>
+          
+        </div>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
 </ion-content>

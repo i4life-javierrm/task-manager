@@ -49,6 +49,14 @@
     --background: #f0f2f5;
 }
 
+body {
+    background-color: #f0f2f5; 
+}
+ion-app {
+    // Ensures all Ionic elements inside the app respect this background
+    --background: #f0f2f5;
+}
+
 // Container to center the box both horizontally and vertically
 .login-container {
     display: flex;

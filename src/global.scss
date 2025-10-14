@@ -37,6 +37,75 @@
 @import "@ionic/angular/css/palettes/dark.system.css";
 
 
+/* ------------------------------------------------------------------------- */
+/* --- MINIMAL NGX-TOASTR OVERRIDES FOR IONIC FRAMEWORK --- */
+/* ------------------------------------------------------------------------- */
+
+/* 1. Global Container Fixes: Ensures it appears above Ionic and is positioned */
+#toast-container {
+    z-index: 99999 !important; /* Must be extremely high */
+    
+    /* Ensure correct positioning for 'toast-bottom-right' */
+    top: auto !important;
+    left: auto !important;
+    right: 12px !important;
+    bottom: 12px !important; 
+    
+    /* Max size constraints for non-full-screen toasts */
+    width: auto !important; 
+    max-width: 90% !important; 
+    height: auto !important; 
+}
+
+/* 2. Individual Toast Body Styling: Minimal look and feel */
+#toast-container > div {
+    background-color: #333 !important; 
+    opacity: 1 !important;             
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.4) !important; 
+    border-radius: 4px !important;
+    padding: 12px !important; 
+    min-width: 250px !important;
+    max-width: 350px !important; 
+}
+
+
+/* 3. Close Button Fixes: Positioning and removes the redundant span */
+.toast-close-button {
+    position: absolute !important;
+    right: 5px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important; /* Vertical centering */
+    width: 20px !important; 
+    height: 20px !important;
+    color: #fff !important; 
+    opacity: 0.8 !important;
+}
+
+/* 3.1. Hide the redundant close button element (fixes the "two X's" issue) */
+.toast-close-button > span {
+    display: none !important; 
+}
+
+/* 4. CRITICAL FIX: Ensure Title and Message text don't overlap the 'X' button */
+.toast-title, .toast-message {
+    /* Push the text content away from the right edge */
+    padding-right: 40px !important; 
+    color: white !important;
+}
+
+.toast-title {
+    padding-left: 15%;
+    font-weight: bold !important;
+    font-size: 14px !important; 
+}
+
+.toast-message {
+    padding-left: 15%;
+    font-size: 13px !important;
+    margin-top: 2px !important;
+}
+
+/* ------------------------------------------------------------------------- */
 
 
 

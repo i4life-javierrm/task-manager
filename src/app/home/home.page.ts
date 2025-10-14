@@ -1,70 +1,118 @@
-import { Component, inject, OnInit } from '@angular/core'; 
+import { Component, OnInit } from '@angular/core'; 
 import { TaskService, Task } from '../services/task.service'; 
-import { IonicModule } from '@ionic/angular'; // <-- Import IonicModule
-import { FormsModule } from '@angular/forms'; // <-- Import FormsModule for [(ngModel)]
-import { CommonModule } from '@angular/common'; // <-- Import CommonModule for *ngFor, etc.
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { IonicModule } from '@ionic/angular';
+import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
+import { Router } from '@angular/router'; // 💡 NEW: Needed for navigation
+import { ToastService } from '../services/toast.service'; // 💡 NEW: Needed for toasts
  
 @Component({ 
   selector: 'app-home', 
   templateUrl: './home.page.html', 
   styleUrls: ['./home.page.scss'], 
-  // You must list ALL required modules here for a standalone component
   standalone: true, 
   imports: [
-    IonicModule,     // Provides <ion-content>, <ion-header>, <ion-list>, etc.
-    FormsModule,     // Provides [(ngModel)]
-    CommonModule     // Provides directives like *ngFor, [class.completed], etc.
+    IonicModule,
+    FormsModule,
+    CommonModule
   ]
 }) 
 export class HomePage implements OnInit { 
   tasks: Task[] = []; 
   newTaskTitle: string = ''; 
 
-  private readonly apiUrl = 'http://localhost:5000';
-
-  private authService = inject(AuthService);
+  // Removed direct injection of AuthService and redundant apiUrl/http fields for cleaner constructor
  
-  constructor(private http: HttpClient, private taskService: TaskService) { } 
+  constructor(
+    private http: HttpClient, 
+    private taskService: TaskService,
+    private authService: AuthService, // 💡 NEW: Inject AuthService
+    private router: Router, // 💡 NEW: Inject Router
+    private toastService: ToastService // 💡 NEW: Inject ToastService
+  ) { } 
  
   ngOnInit() { 
     this.loadTasks(); 
   } 
  
   loadTasks() { 
-    this.taskService.getTasks().subscribe(tasks => this.tasks = tasks);
-} 
+    this.taskService.getTasks().subscribe({
+      next: (tasks) => {
+        this.tasks = tasks;
+      },
+      error: (error) => {
+        console.error('Error al cargar tareas:', error);
+        this.toastService.showError('No se pudieron cargar las tareas. Verifica la conexión.', 'Error de Carga');
+      }
+    });
+  } 
  
-addTask() { 
-  if (!this.newTaskTitle.trim()) return;  
-  this.taskService.addTask(this.newTaskTitle).subscribe(task => { 
-    this.tasks.push(task); 
-    this.newTaskTitle = ''; 
-  }); 
-} 
+  addTask() { 
+    const title = this.newTaskTitle.trim();
+    if (!title) return;
+    
+    // Assuming the user's service method is 'addTask' and not 'createTask'
+    this.taskService.addTask(title).subscribe({
+      next: (task) => { 
+        this.tasks.push(task); 
+        this.newTaskTitle = '';
+        this.toastService.showSuccess('Tarea añadida con éxito.', 'Creación Exitosa');
+      },
+      error: (error) => {
+        let errorMessage = 'Error al crear la tarea.';
+        // Check for specific validation error (e.g., 400 Bad Request)
+        if (error.status === 400) {
+            errorMessage = error.error?.error || 'El título es obligatorio.';
+        }
+        this.toastService.showError(errorMessage, 'Error de Validación');
+      }
+    }); 
+  } 
 
-toggleTask(task: Task) { 
-  
-this.taskService.toggleTask(task._id!).subscribe(updatedTask => { 
-    task.completed = updatedTask.completed; 
-  }); 
-} 
+  // The task object is passed from the UI
+  toggleTask(task: Task) { 
+    this.taskService.toggleTask(task._id!).subscribe({
+      next: (updatedTask) => { 
+        // Update local task status directly on the passed object reference
+        task.completed = updatedTask.completed; 
+        this.toastService.showSuccess(
+          `Tarea marcada como ${updatedTask.completed ? 'completa' : 'pendiente'}.`, 
+          'Actualización Exitosa'
+        );
+      },
+      error: (error) => {
+        console.error('Error al actualizar tarea:', error);
+        this.toastService.showError('No se pudo actualizar la tarea.', 'Error de Actualización');
+      }
+    }); 
+  } 
 
-deleteTask(task: Task) { 
-  this.taskService.deleteTask(task._id!).subscribe(() => { 
-    this.tasks = this.tasks.filter(t => t._id !== task._id); 
-  }); 
-} 
+  // The task object is passed from the UI
+  deleteTask(task: Task) { 
+    this.taskService.deleteTask(task._id!).subscribe({
+      next: () => { 
+        this.tasks = this.tasks.filter(t => t._id !== task._id);
+        this.toastService.showSuccess('Tarea eliminada correctamente.', 'Eliminación Exitosa');
+      },
+      error: (error) => {
+        console.error('Error al eliminar tarea:', error);
+        // Check for 404 Not Found from backend
+        let errorMessage = 'No se pudo eliminar la tarea.';
+        if (error.status === 404) {
+          errorMessage = 'La tarea no existe o ya fue eliminada.';
+        }
+        this.toastService.showError(errorMessage, 'Error de Eliminación');
+      }
+    }); 
+  } 
 
-getTasks(): Observable<Task[]> { 
-  const headers = new HttpHeaders().set('Authorization', `Bearer ${localStorage.getItem('token')}`); 
-  return this.http.get<Task[]>(this.apiUrl, { headers });
-}
-
-logout() { 
-  this.authService.logout(); 
+  logout() { 
+    this.authService.logout(); 
+    this.toastService.showSuccess('Has cerrado sesión.', 'Adiós!');
+    this.router.navigate(['/login']);
   }   
-
+  
+  // Note: Removed the redundant 'getTasks' method from the class body.
 }

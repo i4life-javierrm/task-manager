@@ -24,32 +24,25 @@
       label-placement="floating"
       [(ngModel)]="newTaskTitle" 
       placeholder="Escriba aquí..."
-      _required
+      required 
     ></ion-input>
   </ion-item>
 
-  <!-- 🚀 NEW FIELD: Description Input -->
-  <ion-item class="ion-margin-top">
-    <ion-textarea 
+  <ion-item>
+    <ion-input
       label="Descripción (Opcional)"
       label-placement="floating"
       [(ngModel)]="newTaskDescription"
-      placeholder="Detalles adicionales, recordatorios..."
-      rows="2"
-      autoGrow="true"
-    ></ion-textarea>
-  </ion-item>
-  
-  <ion-item lines="none">
+      placeholder="Detalles de la tarea..."
+    ></ion-input>
+    
     <ion-button 
       slot="end" 
       shape="round" 
       (click)="addTask()"
       [disabled]="!newTaskTitle"
-      color="primary"
     >
       <ion-icon name="add"></ion-icon>
-      <span class="ion-padding-start">Añadir</span>
     </ion-button>
   </ion-item>
 
@@ -66,36 +59,44 @@
           [class.completed]="task.completed"
         >
           <h2>{{ task.title }}</h2>
-          <!-- 🚀 NEW: Display the description field -->
-          <p *ngIf="task.description" class="task-description">{{ task.description }}</p> 
+
+          <!-- 🚀 Display Creation Date -->
+          <p *ngIf="task.createdAt" class="date-label">
+            Creada: {{ task.createdAt | date:'shortDate' }}
+          </p>
+
+          <!-- 🚀 UPDATED: Completion Date (Conditional Display) -->
+          <p class="date-label">
+            Completada:
+            <!-- Display date if completedAt is set -->
+            <span *ngIf="task.completedAt" class="completed-date">
+              {{ task.completedAt | date:'shortDate' }}
+            </span>
+            <!-- Display placeholder if completedAt is NOT set -->
+            <span *ngIf="!task.completedAt" class="not-completed-date">
+              No
+            </span>
+          </p>
+          
+          <p *ngIf="task.description" class="task-description">
+            {{ task.description }}
+          </p>
+          <!-- END UPDATED -->
         </ion-label>
 
         <ion-checkbox
           slot="start"
           [checked]="task.completed"
-          (click)="toggleTask(task)"
-          color="success"
+          (ionChange)="toggleTask(task)"
         ></ion-checkbox>
 
-        <!-- 🚀 UPDATED: Delete button now calls the method that includes the confirmation pop-up -->
-        <ion-button 
-          slot="end" 
-          fill="clear" 
-          color="danger" 
-          (click)="deleteTask(task)"
-        >
-          <ion-icon name="trash" slot="icon-only"></ion-icon>
-        </ion-button>
+        <ion-buttons slot="end">
+          <ion-button color="danger" (click)="deleteTask(task)">
+            <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+
       </ion-item>
     </ion-card>
   </ion-list>
-  
-  <!-- Fallback for no tasks -->
-  <ion-card *ngIf="tasks.length === 0" class="ion-padding ion-text-center">
-    <ion-card-content>
-      <ion-icon name="happy-outline" size="large"></ion-icon>
-      <p class="ion-margin-top">¡Todo listo! No hay tareas pendientes.</p>
-    </ion-card-content>
-  </ion-card>
-  
 </ion-content>

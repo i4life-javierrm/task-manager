@@ -74,13 +74,14 @@ export class HomePage implements OnInit {
   toggleTask(task: Task) { 
     // Optimistic UI update: change the state locally immediately
     const tempCompleted = task.completed;
-    task.completed = !task.completed;
     
     this.taskService.toggleTask(task._id!).subscribe({
       next: (updatedTask) => { 
-        // Update local task status directly on the passed object reference
-        // (Note: it was already optimistically updated, this confirms it if the server returned it)
+        // 🚀 CRITICAL FIX: Update ALL fields that might have changed (completed AND completedAt)
+        // This ensures the frontend task object gets the new completedAt timestamp from the backend.
         task.completed = updatedTask.completed; 
+        task.completedAt = updatedTask.completedAt; // This line is essential
+        
         this.toastService.showSuccess(
           `Tarea marcada como ${updatedTask.completed ? 'completa' : 'pendiente'}.`, 
           'Actualización Exitosa'

@@ -1,15 +1,34 @@
 /* home.page.scss */
 
-.completed {
-  text-decoration: line-through;
-  color: var(--ion-color-medium);
+/* --- Global Layout and Centering --- */
+
+.facebook-background {
+  --background: #f0f2f5; 
 }
 
-/* home.page.scss */
+/* CRITICAL: Centering and width for desktop view */
+ion-content {
+  max-width: 40%;
+  align-self: center;
+}
 
-.completed {
-  text-decoration: line-through;
-  color: var(--ion-color-medium);
+ion-title {
+  font-weight: 600;
+  color: var(--ion-color-dark);
+}
+
+/* --- List Structure Styles --- */
+
+ion-list-header {
+  --background: transparent;
+  --border-width: 0;
+  
+  font-size: 1.2em;
+  font-weight: bold;
+  color: var(--ion-color-dark);
+  
+  /* Adds space between the list header and the list items/cards */
+  margin-bottom: 5px; 
 }
 
 ion-list {
@@ -23,17 +42,37 @@ ion-list {
   margin-bottom: 20px; 
 }
 
-ion-list-header {
-    /* Ensure the header itself doesn't have a background or border that could cause a line */
-    --background: transparent;
-    --border-width: 0;
+/* --- Input Fix for Required/Initial State --- */
+/* 🚀 FIX V2: Use a stronger selector to override Ionic's default red/danger color 
+   for the required input's label when it is initially empty (ng-invalid). */
+ion-item:first-of-type.ng-invalid {
+    /* Set the border/highlight color to a neutral color */
+    --highlight-color-invalid: var(--ion-color-medium);
     
-    font-size: 1.2em;
-    font-weight: bold;
-    color: var(--ion-color-dark);
-    
-    /* Since we removed ion-list padding, add margin back to the header for spacing */
-    margin-bottom: 5px; 
+    /* CRITICAL: Override the floating label color itself */
+    --color-focused: var(--ion-color-primary);
+    --color-invalid: var(--ion-color-medium);
+}
+
+ion-item:first-of-type.item-has-focus {
+    /* Fallback for when it has focus, ensuring a primary color highlight */
+    --highlight-color-invalid: var(--ion-color-primary);
+}
+
+
+/* --- Task Card Styles (Including H2 and Description) --- */
+
+.completed {
+  text-decoration: line-through;
+  color: var(--ion-color-medium);
+}
+
+.task-description {
+  font-size: 0.85em;
+  color: var(--ion-color-medium-shade);
+  margin-top: 2px;
+  padding-left: 2px;
+  border-left: 3px solid var(--ion-color-tertiary);
 }
 
 .task-card {
@@ -51,32 +90,17 @@ ion-list-header {
     margin-bottom: 0; 
   }
 
-  // Ensure the ion-item inside the card is clean
+  // Ensure the ion-item inside the card is clean and uses your preferred padding
   ion-item {
     --padding-start: 0;
     --inner-padding-end: 0;
-    --inner-padding-start: 16px; // Add padding back inside the item
+    --inner-padding-start: 16px; /* Your desired padding */
+    --min-height: 60px; 
+    border-radius: 8px;
 
     h2 {
-        font-weight: 500;
-        font-size: 1.1em;
+      font-weight: 500; /* Your desired font-weight */
+      font-size: 1.1em; /* Your desired font-size */
     }
   }
-}
-
-ion-list-header {
-    font-size: 1.2em;
-    font-weight: bold;
-    color: var(--ion-color-dark);
-}
-
-ion-list-header {
-    font-size: 1.2em;
-    font-weight: bold;
-    color: var(--ion-color-dark);
-}
-
-ion-content {
-  max-width: 40%;
-  align-self: center;
 }

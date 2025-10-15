@@ -1,12 +1,12 @@
 import { Component, OnInit } from '@angular/core'; 
 import { TaskService, Task } from '../services/task.service'; 
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, AlertController } from '@ionic/angular'; // ⬅️ UPDATED: Import AlertController
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
-import { Router } from '@angular/router'; // 💡 NEW: Needed for navigation
-import { ToastService } from '../services/toast.service'; // 💡 NEW: Needed for toasts
+import { Router } from '@angular/router'; 
+import { ToastService } from '../services/toast.service'; 
  
 @Component({ 
   selector: 'app-home', 
@@ -22,15 +22,16 @@ import { ToastService } from '../services/toast.service'; // 💡 NEW: Needed fo
 export class HomePage implements OnInit { 
   tasks: Task[] = []; 
   newTaskTitle: string = ''; 
+  // 🚀 NEW STATE VARIABLE: For task description input
+  newTaskDescription: string = ''; 
 
-  // Removed direct injection of AuthService and redundant apiUrl/http fields for cleaner constructor
- 
   constructor(
     private http: HttpClient, 
     private taskService: TaskService,
-    private authService: AuthService, // 💡 NEW: Inject AuthService
-    private router: Router, // 💡 NEW: Inject Router
-    private toastService: ToastService // 💡 NEW: Inject ToastService
+    private authService: AuthService, 
+    private router: Router, 
+    private toastService: ToastService,
+    private alertController: AlertController // ⬅️ NEW: Inject AlertController
   ) { } 
  
   ngOnInit() { 
@@ -44,38 +45,41 @@ export class HomePage implements OnInit {
       },
       error: (error) => {
         console.error('Error al cargar tareas:', error);
-        this.toastService.showError('No se pudieron cargar las tareas. Verifica la conexión.', 'Error de Carga');
-      }
-    });
-  } 
- 
-  addTask() { 
-    const title = this.newTaskTitle.trim();
-    if (!title) return;
-    
-    // Assuming the user's service method is 'addTask' and not 'createTask'
-    this.taskService.addTask(title).subscribe({
-      next: (task) => { 
-        this.tasks.push(task); 
-        this.newTaskTitle = '';
-        this.toastService.showSuccess('Tarea añadida con éxito.', 'Creación Exitosa');
-      },
-      error: (error) => {
-        let errorMessage = 'Error al crear la tarea.';
-        // Check for specific validation error (e.g., 400 Bad Request)
-        if (error.status === 400) {
-            errorMessage = error.error?.error || 'El título es obligatorio.';
-        }
-        this.toastService.showError(errorMessage, 'Error de Validación');
+        this.toastService.showError('No se pudieron cargar las tareas.', 'Error de Carga');
       }
     }); 
   } 
 
-  // The task object is passed from the UI
+  addTask() {
+    // Add validation check for the case where the input might be empty (even with disabled button)
+    if (!this.newTaskTitle) {
+      this.toastService.showError('El título de la tarea es obligatorio.', 'Faltan Datos');
+      return;
+    }
+
+    this.taskService.addTask(this.newTaskTitle, this.newTaskDescription).subscribe({
+      next: (newTask) => {
+        this.tasks.unshift(newTask); // Add to the start of the array
+        this.newTaskTitle = ''; // Clear input
+        this.newTaskDescription = ''; // Clear description
+        this.toastService.showSuccess('Tarea añadida correctamente.', 'Creación Exitosa');
+      },
+      error: (error) => {
+        console.error('Error al agregar tarea:', error);
+        this.toastService.showError('No se pudo añadir la tarea.', 'Error de Creación');
+      }
+    });
+  }
+
   toggleTask(task: Task) { 
+    // Optimistic UI update: change the state locally immediately
+    const tempCompleted = task.completed;
+    task.completed = !task.completed;
+    
     this.taskService.toggleTask(task._id!).subscribe({
       next: (updatedTask) => { 
         // Update local task status directly on the passed object reference
+        // (Note: it was already optimistically updated, this confirms it if the server returned it)
         task.completed = updatedTask.completed; 
         this.toastService.showSuccess(
           `Tarea marcada como ${updatedTask.completed ? 'completa' : 'pendiente'}.`, 
@@ -84,35 +88,55 @@ export class HomePage implements OnInit {
       },
       error: (error) => {
         console.error('Error al actualizar tarea:', error);
+        // Revert optimistic update on error
+        task.completed = tempCompleted; 
         this.toastService.showError('No se pudo actualizar la tarea.', 'Error de Actualización');
       }
     }); 
   } 
 
-  // The task object is passed from the UI
-  deleteTask(task: Task) { 
-    this.taskService.deleteTask(task._id!).subscribe({
-      next: () => { 
-        this.tasks = this.tasks.filter(t => t._id !== task._id);
-        this.toastService.showSuccess('Tarea eliminada correctamente.', 'Eliminación Exitosa');
-      },
-      error: (error) => {
-        console.error('Error al eliminar tarea:', error);
-        // Check for 404 Not Found from backend
-        let errorMessage = 'No se pudo eliminar la tarea.';
-        if (error.status === 404) {
-          errorMessage = 'La tarea no existe o ya fue eliminada.';
-        }
-        this.toastService.showError(errorMessage, 'Error de Eliminación');
-      }
-    }); 
+  // 🚀 UPDATED: Handles the confirmation pop-up
+  async deleteTask(task: Task) { 
+    const alert = await this.alertController.create({
+      header: 'Confirmar Eliminación',
+      message: `¿Está seguro que desea eliminar la tarea "${task.title}"? Esta acción no se puede deshacer.`,
+      buttons: [
+        {
+          text: 'Cancelar',
+          role: 'cancel',
+          cssClass: 'secondary',
+        },
+        {
+          text: 'Eliminar',
+          cssClass: 'ion-color-danger', // Use Ionic danger color for delete button
+          handler: () => {
+            this.taskService.deleteTask(task._id!).subscribe({
+              next: () => { 
+                // Remove the task from the local array
+                this.tasks = this.tasks.filter(t => t._id !== task._id);
+                this.toastService.showSuccess('Tarea eliminada correctamente.', 'Eliminación Exitosa');
+              },
+              error: (error) => {
+                console.error('Error al eliminar tarea:', error);
+                // Check for 404/403 status for specific user feedback
+                let errorMessage = 'No se pudo eliminar la tarea.';
+                if (error.status === 404 || error.status === 403) { 
+                  errorMessage = 'La tarea no existe o no tienes permiso.';
+                }
+                this.toastService.showError(errorMessage, 'Error de Eliminación');
+              }
+            });
+          },
+        },
+      ],
+    });
+
+    await alert.present();
   } 
 
   logout() { 
     this.authService.logout(); 
     this.toastService.showSuccess('Has cerrado sesión.', 'Adiós!');
-    this.router.navigate(['/login']);
-  }   
-  
-  // Note: Removed the redundant 'getTasks' method from the class body.
+    this.router.navigateByUrl('/login'); // Redirect to login
+  }
 }

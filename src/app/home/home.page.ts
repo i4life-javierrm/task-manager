@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core'; 
 import { TaskService, Task } from '../services/task.service'; 
-import { IonicModule, AlertController } from '@ionic/angular'; // ⬅️ UPDATED: Import AlertController
+import { IonicModule, AlertController } from '@ionic/angular'; 
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -22,8 +22,10 @@ import { ToastService } from '../services/toast.service';
 export class HomePage implements OnInit { 
   tasks: Task[] = []; 
   newTaskTitle: string = ''; 
-  // 🚀 NEW STATE VARIABLE: For task description input
   newTaskDescription: string = ''; 
+  
+  // 🚀 NUEVA PROPIEDAD: Para el control de visibilidad del botón de Admin
+  isAdminUser: boolean = false; 
 
   constructor(
     private http: HttpClient, 
@@ -31,10 +33,12 @@ export class HomePage implements OnInit {
     private authService: AuthService, 
     private router: Router, 
     private toastService: ToastService,
-    private alertController: AlertController // ⬅️ NEW: Inject AlertController
+    private alertController: AlertController 
   ) { } 
  
   ngOnInit() { 
+    // 🚀 NUEVA LÓGICA: Verificar rol al inicio para mostrar el botón
+    this.isAdminUser = this.authService.isAdmin();
     this.loadTasks(); 
   } 
  
@@ -51,7 +55,6 @@ export class HomePage implements OnInit {
   } 
 
   addTask() {
-    // Add validation check for the case where the input might be empty (even with disabled button)
     if (!this.newTaskTitle) {
       this.toastService.showError('El título de la tarea es obligatorio.', 'Faltan Datos');
       return;
@@ -71,16 +74,13 @@ export class HomePage implements OnInit {
     });
   }
 
-  toggleTask(task: Task) { 
-    // Optimistic UI update: change the state locally immediately
-    const tempCompleted = task.completed;
+  toggleTaskCompletion(task: Task) { // ⬅️ Renombrado de toggleTask a toggleTaskCompletion para claridad
+    // No hay necesidad de un update optimista aquí ya que usamos Object.assign al final
     
     this.taskService.toggleTask(task._id!).subscribe({
       next: (updatedTask) => { 
-        // 🚀 CRITICAL FIX: Update ALL fields that might have changed (completed AND completedAt)
-        // This ensures the frontend task object gets the new completedAt timestamp from the backend.
-        task.completed = updatedTask.completed; 
-        task.completedAt = updatedTask.completedAt; // This line is essential
+        // Actualiza el objeto local con la respuesta del backend
+        Object.assign(task, updatedTask); 
         
         this.toastService.showSuccess(
           `Tarea marcada como ${updatedTask.completed ? 'completa' : 'pendiente'}.`, 
@@ -89,14 +89,11 @@ export class HomePage implements OnInit {
       },
       error: (error) => {
         console.error('Error al actualizar tarea:', error);
-        // Revert optimistic update on error
-        task.completed = tempCompleted; 
         this.toastService.showError('No se pudo actualizar la tarea.', 'Error de Actualización');
       }
     }); 
   } 
 
-  // 🚀 UPDATED: Handles the confirmation pop-up
   async deleteTask(task: Task) { 
     const alert = await this.alertController.create({
       header: 'Confirmar Eliminación',
@@ -109,17 +106,15 @@ export class HomePage implements OnInit {
         },
         {
           text: 'Eliminar',
-          cssClass: 'ion-color-danger', // Use Ionic danger color for delete button
+          cssClass: 'ion-color-danger',
           handler: () => {
             this.taskService.deleteTask(task._id!).subscribe({
               next: () => { 
-                // Remove the task from the local array
                 this.tasks = this.tasks.filter(t => t._id !== task._id);
                 this.toastService.showSuccess('Tarea eliminada correctamente.', 'Eliminación Exitosa');
               },
               error: (error) => {
                 console.error('Error al eliminar tarea:', error);
-                // Check for 404/403 status for specific user feedback
                 let errorMessage = 'No se pudo eliminar la tarea.';
                 if (error.status === 404 || error.status === 403) { 
                   errorMessage = 'La tarea no existe o no tienes permiso.';
@@ -134,6 +129,11 @@ export class HomePage implements OnInit {
 
     await alert.present();
   } 
+
+  // 🚀 NUEVO MÉTODO: Navegación al panel de administración
+  goToAdmin() {
+    this.router.navigateByUrl('/admin');
+  }
 
   logout() { 
     this.authService.logout(); 

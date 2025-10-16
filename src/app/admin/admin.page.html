@@ -1,0 +1,56 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button (click)="goBack()" text="Inicio"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Panel de Administración</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Gestión de Usuarios</ion-card-title>
+      <ion-card-subtitle>Solo visible para administradores</ion-card-subtitle>
+    </ion-card-header>
+  </ion-card>
+
+  <!-- Indicador de Carga -->
+  <div *ngIf="isLoading" class="ion-text-center ion-padding">
+    <ion-spinner name="crescent"></ion-spinner>
+    <p>Cargando usuarios...</p>
+  </div>
+
+  <!-- Mensaje de Error -->
+  <ion-text color="danger" *ngIf="errorMessage">
+    <p class="ion-padding">{{ errorMessage }}</p>
+  </ion-text>
+
+  <!-- Lista de Usuarios -->
+  <ion-list *ngIf="!isLoading && users.length > 0">
+    <ion-list-header>
+      <ion-label>Usuarios Registrados ({{ users.length }})</ion-label>
+    </ion-list-header>
+    
+    <ion-item *ngFor="let user of users">
+      <ion-label>
+        <h2>{{ user.username }}</h2>
+        <p>ID: {{ user._id }}</p>
+        <p>Creado: {{ user.createdAt | date: 'mediumDate' }}</p>
+      </ion-label>
+      
+      <!-- Icono de Rol -->
+      <ion-chip slot="end" [color]="user.role === 'admin' ? 'warning' : 'success'">
+        <ion-icon [name]="user.role === 'admin' ? 'shield-outline' : 'person-outline'"></ion-icon>
+        <ion-label>{{ user.role | uppercase }}</ion-label>
+      </ion-chip>
+      
+      <!-- Botón de Eliminar Usuario -->
+      <ion-button slot="end" fill="clear" color="danger" (click)="deleteUser(user._id)">
+        <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-item>
+  </ion-list>
+  
+</ion-content>

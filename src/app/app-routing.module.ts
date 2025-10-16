@@ -14,26 +14,28 @@ const routes: Routes = [
       ),  
     canActivate: [authGuard] 
   }, 
-  // -----------------------------------------------------------
-  // Fix 1: LoginPage is loaded via an NgModule, so load it with 'loadChildren' 
-  // -----------------------------------------------------------
   {  
     path: 'login',  
     loadChildren: () => 
       import('./login/login.module').then(m => 
-        m.LoginPageModule // LoginPageModule is likely an NgModule
+        m.LoginPageModule
       )  
   },
-  // -----------------------------------------------------------
-  // Fix 2: RegisterPage is a Standalone Component, so load it with 'loadComponent'
-  // -----------------------------------------------------------
   {
     path: 'register',
-    // CHANGE: Use loadComponent instead of loadChildren
     loadComponent: () => 
       import('./register/register.page').then(m => 
-        m.RegisterPage // RegisterPage is the Standalone Component class
+        m.RegisterPage
       )
+  },
+  // 🚀 NUEVA RUTA: AdminPage (asumiendo que será un módulo standalone)
+  {
+    path: 'admin',
+    loadComponent: () => 
+      import('./admin/admin.page').then(m => 
+        m.AdminPage
+      ),
+    canActivate: [authGuard] // Proteger esta ruta también
   }
 ];
 

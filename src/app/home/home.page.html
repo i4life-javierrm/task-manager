@@ -1,102 +1,91 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>
-      Gestor de Tareas
-    </ion-title>
+    <ion-title>Lista de Tareas</ion-title>
+
+    <!-- 🚀 BOTÓN DE ADMINISTRACIÓN: Visible solo para administradores -->
+    <ion-buttons slot="primary" *ngIf="isAdminUser">
+      <ion-button (click)="goToAdmin()">
+        <ion-icon name="shield-half-outline" slot="icon-only" color="primary"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+
+    <!-- BOTÓN DE CERRAR SESIÓN -->
     <ion-buttons slot="end">
-      <ion-button (click)="logout()" fill="clear" color="medium">
-        <ion-icon name="log-out-outline" slot="start"></ion-icon>
-        Cerrar sesión
+      <ion-button (click)="logout()">
+        <ion-icon name="log-out-outline" slot="icon-only" color="danger"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding facebook-background" [fullscreen]="true">
+<ion-content [fullscreen]="true" class="ion-padding">
 
-  <ion-list-header class="ion-margin-top">
-    <ion-label>Añadir Nueva Tarea</ion-label>
-  </ion-list-header>
-
-  <ion-item>
-    <ion-input 
-      label="Título de la tarea"
-      label-placement="floating"
-      [(ngModel)]="newTaskTitle" 
-      placeholder="Escriba aquí..."
-      required 
-    ></ion-input>
-  </ion-item>
-
-  <ion-item>
-    <ion-input
-      label="Descripción (Opcional)"
-      label-placement="floating"
-      [(ngModel)]="newTaskDescription"
-      placeholder="Detalles de la tarea..."
-    ></ion-input>
-    
-    <ion-button 
-      slot="end" 
-      shape="round" 
-      (click)="addTask()"
-      [disabled]="!newTaskTitle"
-    >
-      <ion-icon name="add"></ion-icon>
-    </ion-button>
-  </ion-item>
-
-  <ion-list class="ion-margin-top">
-    <ion-list-header>
-      <ion-label>Tareas Pendientes</ion-label>
-    </ion-list-header>
-
-    <ion-card *ngFor="let task of tasks" class="task-card">
-      <ion-item lines="none">
-        
-        <ion-label 
-          class="ion-text-wrap" 
-          [class.completed]="task.completed"
-        >
-          <h2>{{ task.title }}</h2>
-
-          <!-- 🚀 Display Creation Date -->
-          <p *ngIf="task.createdAt" class="date-label">
-            Creada: {{ task.createdAt | date:'shortDate' }}
-          </p>
-
-          <!-- 🚀 UPDATED: Completion Date (Conditional Display) -->
-          <p class="date-label">
-            Completada:
-            <!-- Display date if completedAt is set -->
-            <span *ngIf="task.completedAt" class="completed-date">
-              {{ task.completedAt | date:'shortDate' }}
-            </span>
-            <!-- Display placeholder if completedAt is NOT set -->
-            <span *ngIf="!task.completedAt" class="not-completed-date">
-              No
-            </span>
-          </p>
-          
-          <p *ngIf="task.description" class="task-description">
-            {{ task.description }}
-          </p>
-          <!-- END UPDATED -->
-        </ion-label>
-
-        <ion-checkbox
-          slot="start"
-          [checked]="task.completed"
-          (ionChange)="toggleTask(task)"
-        ></ion-checkbox>
-
-        <ion-buttons slot="end">
-          <ion-button color="danger" (click)="deleteTask(task)">
-            <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
-          </ion-button>
-        </ion-buttons>
-
+  <!-- FORMULARIO DE AÑADIR TAREA -->
+  <ion-card class="ion-margin-bottom">
+    <ion-card-header>
+      <ion-card-title>Nueva Tarea</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item>
+        <ion-input label="Título" labelPlacement="stacked" [(ngModel)]="newTaskTitle" required placeholder="Ej. Comprar pan"></ion-input>
       </ion-item>
-    </ion-card>
+      <ion-item lines="none">
+        <ion-textarea label="Descripción (Opcional)" labelPlacement="stacked" [(ngModel)]="newTaskDescription" rows="3" placeholder="Detalles de la tarea..."></ion-textarea>
+      </ion-item>
+      <ion-button expand="block" class="ion-margin-top" (click)="addTask()" [disabled]="!newTaskTitle">
+        Añadir Tarea
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- LISTA DE TAREAS -->
+  <ion-list *ngIf="tasks.length > 0; else noTasks">
+    <ion-item *ngFor="let task of tasks" lines="full" class="task-item" [class.completed]="task.completed">
+      
+      <!-- CHECKBOX (Inicio del Item) -->
+      <ion-checkbox slot="start" [checked]="task.completed" (ionChange)="toggleTaskCompletion(task)">
+      </ion-checkbox>
+
+      <!-- ETIQUETAS DE TEXTO (Centro del Item) -->
+      <ion-label>
+        <h2>{{ task.title }}</h2>
+        
+        <!-- Fecha de Creación -->
+        <p class="date-text">
+          Creada: {{ task.createdAt | date: 'shortDate' }}
+        </p>
+        
+        <!-- ESTADO COMPLETADO Y FECHA -->
+        <p [class.completed-date]="task.completed" [class.pending-status]="!task.completed">
+          Completada: 
+          <span *ngIf="task.completedAt; else pendingStatus">
+             {{ task.completedAt | date: 'shortDate' }}
+          </span>
+          <ng-template #pendingStatus>
+             No
+          </ng-template>
+        </p>
+
+        <!-- Descripción (si existe) -->
+        <p class="description-text">{{ task.description }}</p>
+
+      </ion-label>
+
+      <!-- BOTÓN DE ELIMINAR (Final del Item) -->
+      <ion-button slot="end" fill="clear" color="danger" (click)="deleteTask(task)">
+        <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-item>
   </ion-list>
+
+  <!-- TEMPLATE: Si no hay tareas -->
+  <ng-template #noTasks>
+    <div class="ion-text-center ion-padding-top">
+      <ion-text color="medium">
+        <ion-icon name="happy-outline" size="large"></ion-icon>
+        <p>¡No tienes tareas pendientes!</p>
+      </ion-text>
+    </div>
+  </ng-template>
+
 </ion-content>

@@ -1,17 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, AlertController } from '@ionic/angular';
 import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
-
-// Definición de una interfaz simple para la lista de usuarios del backend
-interface User {
-  _id: string;
-  username: string;
-  role: 'user' | 'admin';
-  createdAt: Date;
-}
+import { AdminService, User } from '../services/admin.service'; // 👈 NUEVA IMPORTACIÓN
+import { ToastService } from '../services/toast.service'; // 👈 NUEVA IMPORTACIÓN
 
 @Component({
   selector: 'app-admin',
@@ -22,22 +16,20 @@ interface User {
 })
 export class AdminPage implements OnInit {
   
-  // Lista temporal de usuarios. Se llenará desde el backend.
   users: User[] = []; 
   isLoading: boolean = true;
   errorMessage: string | null = null;
   
-  // Asumiendo que tendrás un servicio AdminService para las peticiones
-  // private adminService: AdminService, 
-
   constructor(
     private authService: AuthService, 
-    private router: Router
+    private router: Router,
+    private adminService: AdminService, // 👈 INYECTAR SERVICIO
+    private toastService: ToastService,
+    private alertController: AlertController
   ) { }
 
   ngOnInit() {
-    // ⚠️ Importante: Protección de ruta
-    // El canActivate de las rutas ya debería manejar esto, pero es buena práctica.
+    // Protección de ruta (aunque el guard de Angular ya lo debería hacer)
     if (!this.authService.isAdmin()) {
       this.router.navigateByUrl('/home');
       return;
@@ -50,38 +42,56 @@ export class AdminPage implements OnInit {
     this.isLoading = true;
     this.errorMessage = null;
 
-    // 🔴 NOTA: Aquí iría la llamada al AdminService
-    // Ejemplo de llamada (descomentar y usar un servicio real cuando exista):
-    /*
     this.adminService.getAllUsers().subscribe({
       next: (users) => {
-        this.users = users;
+        // Ordenar por rol (admin primero)
+        this.users = users.sort((a, b) => (a.role === 'admin' && b.role !== 'admin' ? -1 : 1));
         this.isLoading = false;
+        this.toastService.showSuccess(`Se cargaron ${this.users.length} usuarios.`, 'Carga Exitosa');
       },
       error: (error) => {
-        this.errorMessage = 'Error al cargar la lista de usuarios. Verifica el endpoint /api/admin/users.';
+        console.error('Error al cargar usuarios:', error);
+        this.errorMessage = 'Error al cargar la lista de usuarios. Asegúrate que el backend está corriendo y el endpoint está disponible.';
         this.isLoading = false;
+        this.toastService.showError('Acceso denegado o error de red.', 'Error de API');
       }
     });
-    */
+  }
 
-    // Simulando carga de datos mientras el backend no existe
-    setTimeout(() => {
-        this.users = [
-            { _id: 'user123', username: 'admin_test', role: 'admin', createdAt: new Date() },
-            { _id: 'user456', username: 'usuario_normal', role: 'user', createdAt: new Date() },
-        ];
-        this.isLoading = false;
-    }, 1000);
+  async deleteUser(user: User) {
+    const alert = await this.alertController.create({
+      header: 'Confirmar Eliminación',
+      message: `¿Está seguro que desea eliminar al usuario "${user.username}" (${user.role})?`,
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        { 
+          text: 'Eliminar',
+          cssClass: 'ion-color-danger',
+          handler: () => {
+            if (user.role === 'admin') {
+              this.toastService.showError('No se puede eliminar un administrador desde el panel.', 'Restricción');
+              return;
+            }
+
+            this.adminService.deleteUser(user._id).subscribe({
+              next: () => {
+                this.users = this.users.filter(u => u._id !== user._id);
+                this.toastService.showSuccess(`Usuario ${user.username} eliminado.`, 'Eliminación Exitosa');
+              },
+              error: (error) => {
+                console.error('Error al eliminar usuario:', error);
+                this.toastService.showError('No se pudo eliminar el usuario.', 'Error de API');
+              }
+            });
+          }
+        },
+      ],
+    });
+
+    await alert.present();
   }
 
   goBack() {
     this.router.navigateByUrl('/home');
-  }
-
-  // 🔴 NOTA: Método para eliminar un usuario (requiere endpoint en el backend)
-  deleteUser(userId: string) {
-    console.log(`Eliminar usuario: ${userId}`);
-    // Implementación del servicio de eliminación aquí
   }
 }

@@ -2,7 +2,7 @@
 
 import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
-import { authGuard } from './guards/auth-guard'; 
+import { authGuard } from './guards/auth-guard'; // 👈 Usamos la versión actualizada
 
 const routes: Routes = [ 
   { path: '', redirectTo: 'login', pathMatch: 'full' }, 
@@ -28,14 +28,16 @@ const routes: Routes = [
         m.RegisterPage
       )
   },
-  // 🚀 NUEVA RUTA: AdminPage (asumiendo que será un módulo standalone)
+  // -----------------------------------------------------------
+  // 💥 ADMIN ROUTE: Referencia al nuevo AdminPage_v2
+  // -----------------------------------------------------------
   {
     path: 'admin',
     loadComponent: () => 
       import('./admin/admin.page').then(m => 
-        m.AdminPage
+        m.AdminPage // El nombre de la clase sigue siendo AdminPage
       ),
-    canActivate: [authGuard] // Proteger esta ruta también
+    canActivate: [authGuard]
   }
 ];
 
@@ -45,4 +47,4 @@ const routes: Routes = [
   ],
   exports: [RouterModule]
 })
-export class AppRoutingModule { }
+export class App{}

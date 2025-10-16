@@ -1,11 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule, AlertController } from '@ionic/angular';
-import { AuthService } from '../services/auth.service';
+import { IonicModule, ToastController, AlertController } from '@ionic/angular';
+import { AdminService } from '../services/admin.service'; // 👈 Usamos la versión actualizada
+import { User } from '../interfaces/user.interface'; // 👈 Importación correcta
+import { AuthService } from '../services/auth.service'; // 👈 Usamos la versión actualizada
 import { Router } from '@angular/router';
-import { AdminService, User } from '../services/admin.service'; // 👈 NUEVA IMPORTACIÓN
-import { ToastService } from '../services/toast.service'; // 👈 NUEVA IMPORTACIÓN
 
 @Component({
   selector: 'app-admin',
@@ -15,83 +15,91 @@ import { ToastService } from '../services/toast.service'; // 👈 NUEVA IMPORTAC
   imports: [IonicModule, CommonModule, FormsModule]
 })
 export class AdminPage implements OnInit {
-  
-  users: User[] = []; 
-  isLoading: boolean = true;
-  errorMessage: string | null = null;
-  
-  constructor(
-    private authService: AuthService, 
-    private router: Router,
-    private adminService: AdminService, // 👈 INYECTAR SERVICIO
-    private toastService: ToastService,
-    private alertController: AlertController
-  ) { }
+  private adminService = inject(AdminService);
+  private authService = inject(AuthService);
+  private toastCtrl = inject(ToastController);
+  private alertCtrl = inject(AlertController);
+  private router = inject(Router);
+
+  users: User[] = [];
+  isLoading: boolean = false; 
+
+  constructor() { }
 
   ngOnInit() {
-    // Protección de ruta (aunque el guard de Angular ya lo debería hacer)
-    if (!this.authService.isAdmin()) {
+    // 💥 FIX 1: Usar 'isAdmin' como propiedad (sin paréntesis)
+    if (!this.authService.isAdmin) {
+      this.presentToast('Acceso no autorizado. Debe ser administrador.', 'danger');
       this.router.navigateByUrl('/home');
       return;
     }
-    
     this.loadUsers();
   }
-  
+
   loadUsers() {
     this.isLoading = true;
-    this.errorMessage = null;
-
-    this.adminService.getAllUsers().subscribe({
-      next: (users) => {
-        // Ordenar por rol (admin primero)
-        this.users = users.sort((a, b) => (a.role === 'admin' && b.role !== 'admin' ? -1 : 1));
+    // 💥 FIX 2: Usar 'getUsers()'
+    this.adminService.getUsers().subscribe({
+      // 💥 FIX 3: Tipado fuerte para 'users: User[]'
+      next: (users: User[]) => {
+        // Ordenar: Administradores primero (isAdmin: true)
+        // 💥 FIX 4: Tipado fuerte para a y b, y usar 'isAdmin'
+        this.users = users.sort((a: User, b: User) => {
+          if (a.isAdmin === b.isAdmin) return 0;
+          return a.isAdmin ? -1 : 1;
+        });
         this.isLoading = false;
-        this.toastService.showSuccess(`Se cargaron ${this.users.length} usuarios.`, 'Carga Exitosa');
       },
-      error: (error) => {
-        console.error('Error al cargar usuarios:', error);
-        this.errorMessage = 'Error al cargar la lista de usuarios. Asegúrate que el backend está corriendo y el endpoint está disponible.';
+      // 💥 FIX 5: Tipado fuerte para 'error: any'
+      error: (error: any) => {
         this.isLoading = false;
-        this.toastService.showError('Acceso denegado o error de red.', 'Error de API');
+        console.error('Error al cargar usuarios:', error);
+        this.presentToast(`Error al cargar usuarios: ${error.message || 'Error desconocido'}`, 'danger');
       }
     });
   }
 
-  async deleteUser(user: User) {
-    const alert = await this.alertController.create({
+  async deleteUser(userId: string) {
+    const userToDelete = this.users.find(u => u._id === userId);
+
+    if (userToDelete && userToDelete.isAdmin) {
+        this.presentToast('No puedes eliminar una cuenta de administrador.', 'warning');
+        return;
+    }
+
+    const alert = await this.alertCtrl.create({
       header: 'Confirmar Eliminación',
-      message: `¿Está seguro que desea eliminar al usuario "${user.username}" (${user.role})?`,
+      message: `¿Está seguro que desea eliminar la cuenta de ${userToDelete?.username}?`,
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
         { 
-          text: 'Eliminar',
+          text: 'Eliminar', 
           cssClass: 'ion-color-danger',
           handler: () => {
-            if (user.role === 'admin') {
-              this.toastService.showError('No se puede eliminar un administrador desde el panel.', 'Restricción');
-              return;
-            }
-
-            this.adminService.deleteUser(user._id).subscribe({
+            this.adminService.deleteUser(userId).subscribe({
               next: () => {
-                this.users = this.users.filter(u => u._id !== user._id);
-                this.toastService.showSuccess(`Usuario ${user.username} eliminado.`, 'Eliminación Exitosa');
+                this.users = this.users.filter(u => u._id !== userId);
+                this.presentToast(`Usuario eliminado con éxito.`, 'success');
               },
-              error: (error) => {
+              error: (error: any) => {
                 console.error('Error al eliminar usuario:', error);
-                this.toastService.showError('No se pudo eliminar el usuario.', 'Error de API');
+                this.presentToast(`Error al eliminar usuario: ${error.error?.error || 'Error desconocido'}`, 'danger');
               }
             });
           }
-        },
-      ],
+        }
+      ]
     });
-
     await alert.present();
   }
 
-  goBack() {
-    this.router.navigateByUrl('/home');
+  async presentToast(message: string, color: string) {
+    const toast = await this.toastCtrl.create({
+      message,
+      duration: 3000,
+      position: 'top',
+      color: color
+    });
+    await toast.present();
   }
 }

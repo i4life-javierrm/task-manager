@@ -1,52 +1,32 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { AuthService } from '../services/auth.service';
+import { AuthService } from '../services/auth.service'; // 👈 Usamos la versión actualizada
+import { ToastController } from '@ionic/angular';
 
-/**
- * Utility function to decode and check JWT expiration
- */
-function isTokenExpired(token: string): boolean {
-  try {
-    // SECURITY NOTE: This check is for client-side UX only. 
-    // The backend MUST perform the full signature validation.
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    
-    // Check if 'exp' exists and if the expiration time (in seconds) * 1000 
-    // is less than the current time (in milliseconds)
-    if (payload.exp && payload.exp * 1000 < Date.now()) {
-      return true;
-    }
-    return false;
-
-  } catch (error) {
-    // Handle cases where token is malformed and cannot be decoded
-    console.error('Error decoding token:', error);
-    return true; // Treat malformed token as expired
-  }
-}
-
-
-export const authGuard: CanActivateFn = () => {
-  const authService = inject(AuthService);
-  const router = inject(Router);
-  
-  const token = authService.getToken();
-
-  if (!token) {
-    // 1. No token found, redirect to login
-    router.navigate(['/login']);
-    return false;
-  }
-
-  if (isTokenExpired(token)) {
-    // 2. Token is expired, log out and redirect
-    authService.logout();
-    router.navigate(['/login']);
-    return false;
-  }
-  
-  // 3. Token exists and is not expired
-  return true;
+// Helper function to display toasts (since we cannot inject ToastController in a pure function)
+const presentToast = async (toastCtrl: ToastController, message: string, color: string) => {
+  const toast = await toastCtrl.create({
+    message,
+    duration: 3000,
+    position: 'top',
+    color: color,
+  });
+  await toast.present();
 };
 
-// NOTE: You can now delete the old AuthGuard class, as it's replaced by the function 'authGuard'.
+export const authGuard: CanActivateFn = async (route, state) => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+  const toastCtrl = inject(ToastController);
+
+  // 💥 FIX: Usar getToken() del servicio
+  const token = authService.getToken();
+
+  if (token) {
+    return true;
+  } else {
+    // User is not authenticated
+    await presentToast(toastCtrl, 'Debes iniciar sesión para acceder a esta página.', 'warning');
+    return router.createUrlTree(['/login']);
+  }
+};

@@ -1,10 +1,10 @@
-import { Component, OnInit } from '@angular/core'; 
+import { Component, OnInit, inject } from '@angular/core'; 
 import { TaskService, Task } from '../services/task.service'; 
 import { IonicModule, AlertController } from '@ionic/angular'; 
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { AuthService } from '../services/auth.service';
+import { AuthService } from '../services/auth.service'; // 👈 Usamos la versión actualizada
 import { Router } from '@angular/router'; 
 import { ToastService } from '../services/toast.service'; 
  
@@ -22,24 +22,22 @@ import { ToastService } from '../services/toast.service';
 export class HomePage implements OnInit { 
   tasks: Task[] = []; 
   newTaskTitle: string = ''; 
-  newTaskDescription: string = ''; 
-  
-  // 🚀 NUEVA PROPIEDAD: Para el control de visibilidad del botón de Admin
+  newTaskDescription: string = '';
+  // NEW STATE VARIABLE: Para mostrar el botón de Admin
   isAdminUser: boolean = false; 
 
-  constructor(
-    private http: HttpClient, 
-    private taskService: TaskService,
-    private authService: AuthService, 
-    private router: Router, 
-    private toastService: ToastService,
-    private alertController: AlertController 
-  ) { } 
+  private taskService = inject(TaskService);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  private toastService = inject(ToastService);
+  private alertController = inject(AlertController);
+
+  constructor() { } 
  
   ngOnInit() { 
-    // 🚀 NUEVA LÓGICA: Verificar rol al inicio para mostrar el botón
-    this.isAdminUser = this.authService.isAdmin();
     this.loadTasks(); 
+    // 💥 FIX: Usar 'isAdmin' como propiedad (sin paréntesis)
+    this.isAdminUser = this.authService.isAdmin; 
   } 
  
   loadTasks() { 
@@ -49,55 +47,62 @@ export class HomePage implements OnInit {
       },
       error: (error) => {
         console.error('Error al cargar tareas:', error);
-        this.toastService.showError('No se pudieron cargar las tareas.', 'Error de Carga');
+        if (error.status === 401) {
+          this.authService.logout();
+        }
+        this.toastService.showError('Error al cargar las tareas.', 'Error');
       }
-    }); 
+    });
   } 
 
   addTask() {
-    if (!this.newTaskTitle) {
-      this.toastService.showError('El título de la tarea es obligatorio.', 'Faltan Datos');
+    if (!this.newTaskTitle.trim()) {
+      this.toastService.showWarning('El título de la tarea es obligatorio.', 'Falta Título');
       return;
     }
 
-    this.taskService.addTask(this.newTaskTitle, this.newTaskDescription).subscribe({
-      next: (newTask) => {
-        this.tasks.unshift(newTask); // Add to the start of the array
-        this.newTaskTitle = ''; // Clear input
-        this.newTaskDescription = ''; // Clear description
-        this.toastService.showSuccess('Tarea añadida correctamente.', 'Creación Exitosa');
+    const newTask: Partial<Task> = {
+      title: this.newTaskTitle,
+      description: this.newTaskDescription,
+      completed: false
+    };
+
+    this.taskService.createTask(newTask).subscribe({
+      next: (task) => {
+        this.tasks.unshift(task); 
+        this.newTaskTitle = '';
+        this.newTaskDescription = '';
+        this.toastService.showSuccess('Tarea creada correctamente.', 'Creación Exitosa');
       },
       error: (error) => {
-        console.error('Error al agregar tarea:', error);
-        this.toastService.showError('No se pudo añadir la tarea.', 'Error de Creación');
+        console.error('Error al crear tarea:', error);
+        this.toastService.showError('No se pudo crear la tarea. Inténtelo de nuevo.', 'Error');
       }
     });
   }
 
-  toggleTaskCompletion(task: Task) { // ⬅️ Renombrado de toggleTask a toggleTaskCompletion para claridad
-    // No hay necesidad de un update optimista aquí ya que usamos Object.assign al final
-    
-    this.taskService.toggleTask(task._id!).subscribe({
-      next: (updatedTask) => { 
-        // Actualiza el objeto local con la respuesta del backend
-        Object.assign(task, updatedTask); 
-        
-        this.toastService.showSuccess(
-          `Tarea marcada como ${updatedTask.completed ? 'completa' : 'pendiente'}.`, 
-          'Actualización Exitosa'
-        );
+  toggleTaskCompletion(task: Task) {
+    const updatedTask = { ...task, completed: !task.completed };
+
+    this.taskService.updateTask(updatedTask).subscribe({
+      next: (response) => {
+        const index = this.tasks.findIndex(t => t._id === task._id);
+        if (index > -1) {
+          this.tasks[index] = response;
+          this.toastService.showSuccess(`Tarea marcada como ${response.completed ? 'completa' : 'pendiente'}.`, 'Actualización Exitosa');
+        }
       },
       error: (error) => {
         console.error('Error al actualizar tarea:', error);
         this.toastService.showError('No se pudo actualizar la tarea.', 'Error de Actualización');
       }
-    }); 
-  } 
+    });
+  }
 
-  async deleteTask(task: Task) { 
+  async deleteTask(task: Task) {
     const alert = await this.alertController.create({
       header: 'Confirmar Eliminación',
-      message: `¿Está seguro que desea eliminar la tarea "${task.title}"? Esta acción no se puede deshacer.`,
+      message: `¿Está seguro que desea eliminar la tarea \"${task.title}\"? Esta acción no se puede deshacer.`,
       buttons: [
         {
           text: 'Cancelar',
@@ -106,7 +111,7 @@ export class HomePage implements OnInit {
         },
         {
           text: 'Eliminar',
-          cssClass: 'ion-color-danger',
+          cssClass: 'ion-color-danger', 
           handler: () => {
             this.taskService.deleteTask(task._id!).subscribe({
               next: () => { 
@@ -130,14 +135,9 @@ export class HomePage implements OnInit {
     await alert.present();
   } 
 
-  // 🚀 NUEVO MÉTODO: Navegación al panel de administración
-  goToAdmin() {
-    this.router.navigateByUrl('/admin');
-  }
-
   logout() { 
     this.authService.logout(); 
     this.toastService.showSuccess('Has cerrado sesión.', 'Adiós!');
-    this.router.navigateByUrl('/login'); // Redirect to login
+    this.router.navigateByUrl('/login'); 
   }
 }

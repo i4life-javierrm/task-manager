@@ -3,25 +3,26 @@
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/home"></ion-back-button>
     </ion-buttons>
+    
     <ion-title>
-      Panel de Administrador 
+      Panel de Administrador
       <ion-icon name="hammer-outline"></ion-icon>
     </ion-title>
+    
     <ion-buttons slot="end">
-        <ion-button (click)="currentView === 'users' ? loadUsers() : loadAllTasks()" fill="clear" color="primary">
-            <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
-        </ion-button>
+      <ion-button (click)="logout()" fill="clear" color="dark">
+        <ion-icon name="log-out-outline" slot="icon-only"></ion-icon>
+      </ion-button>
     </ion-buttons>
   </ion-toolbar>
-  <ion-toolbar>
-    <ion-segment [(ngModel)]="currentView" (ionChange)="switchView($event.detail.value)" color="warning">
+
+  <ion-toolbar color="warning">
+    <ion-segment [(ngModel)]="currentView" value="users" mode="md">
       <ion-segment-button value="users">
-        <ion-label>Usuarios</ion-label>
-        <ion-icon name="people-outline"></ion-icon>
+        <ion-label>Usuarios ({{ users.length }})</ion-label>
       </ion-segment-button>
       <ion-segment-button value="tasks">
-        <ion-label>Tareas Globales</ion-label>
-        <ion-icon name="list-outline"></ion-icon>
+        <ion-label>Tareas Globales ({{ allTasks.length }})</ion-label>
       </ion-segment-button>
     </ion-segment>
   </ion-toolbar>
@@ -29,35 +30,26 @@
 
 <ion-content [fullscreen]="true" class="ion-padding">
 
-  @if (currentView === 'users') {
-    <ion-card class="ion-margin-top ion-text-center" color="light">
-      <ion-card-header>
-        <ion-card-title>Gestión de Usuarios</ion-card-title>
-        <ion-card-subtitle>Lista de todas las cuentas registradas en el sistema.</ion-card-subtitle>
-      </ion-card-header>
-    </ion-card>
-
-    <ion-list [inset]="true" class="ion-margin-top">
+  <div *ngIf="currentView === 'users'">
+    <ion-list [inset]="true">
       <ion-list-header>
-        <ion-label>Cuentas ({{ users.length }})</ion-label>
+        <ion-label>Cuentas Registradas</ion-label>
+        <ion-button (click)="loadUsers()" fill="clear" color="primary" [disabled]="isLoading">
+          <ion-icon slot="icon-only" [name]="isLoading ? 'sync-outline' : 'refresh-outline'" [class.spin]="isLoading"></ion-icon>
+        </ion-button>
       </ion-list-header>
-      
-      @if (isLoading) {
-        <ion-item lines="none">
-          <ion-spinner name="crescent" slot="start"></ion-spinner>
-          <ion-label class="ion-padding-start">Cargando usuarios...</ion-label>
-        </ion-item>
-      } @else if (users.length === 0) {
-        <ion-item lines="none">
-          <ion-label class="ion-text-center ion-padding">
-            <p>😢 No se encontraron usuarios en la base de datos.</p>
-          </ion-label>
-        </ion-item>
-      }
 
+      <ion-item *ngIf="isLoading">
+        <ion-spinner name="crescent" slot="start"></ion-spinner>
+        <ion-label>Cargando usuarios...</ion-label>
+      </ion-item>
+      
       @for (user of users; track user._id) {
         <ion-item>
-          <ion-icon slot="start" [name]="user.isAdmin ? 'shield-checkmark-outline' : 'person-outline'" [color]="user.isAdmin ? 'danger' : 'medium'"></ion-icon>
+          <ion-icon slot="start" 
+            [name]="user.isAdmin ? 'shield-checkmark-outline' : 'person-outline'" 
+            [color]="user.isAdmin ? 'danger' : 'medium'">
+          </ion-icon>
 
           <ion-label class="ion-text-wrap">
             <h2>{{ user.username }}</h2>
@@ -74,69 +66,59 @@
                   <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
               </ion-button>
           } @else {
-              <ion-button slot="end" fill="clear" color="medium" [disabled]="true">
+               <ion-button slot="end" fill="clear" color="medium" [disabled]="true">
                   <ion-icon slot="icon-only" name="lock-closed-outline"></ion-icon>
               </ion-button>
           }
         </ion-item>
       }
     </ion-list>
-    
-    <p class="ion-text-center ion-margin-top ion-padding-bottom">
-      <small class="ion-color-medium">El administrador no puede ser eliminado desde este panel.</small>
-    </p>
-  }
+  </div>
 
-  @if (currentView === 'tasks') {
-    <ion-card class="ion-margin-top ion-text-center" color="light">
-      <ion-card-header>
-        <ion-card-title>Tareas Globales</ion-card-title>
-        <ion-card-subtitle>Todas las tareas creadas por todos los usuarios.</ion-card-subtitle>
-      </ion-card-header>
-    </ion-card>
-
-    <ion-list [inset]="true" class="ion-margin-top">
+  <div *ngIf="currentView === 'tasks'">
+    <ion-list [inset]="true">
       <ion-list-header>
-        <ion-label>Tareas ({{ allTasks.length }})</ion-label>
+        <ion-label>Tareas del Sistema</ion-label>
+        <ion-button (click)="loadAllTasks()" fill="clear" color="primary" [disabled]="isTasksLoading">
+          <ion-icon slot="icon-only" [name]="isTasksLoading ? 'sync-outline' : 'refresh-outline'" [class.spin]="isTasksLoading"></ion-icon>
+        </ion-button>
       </ion-list-header>
-      
-      @if (isTasksLoading) {
-        <ion-item lines="none">
-          <ion-spinner name="crescent" slot="start"></ion-spinner>
-          <ion-label class="ion-padding-start">Cargando tareas globales...</ion-label>
-        </ion-item>
-      } @else if (allTasks.length === 0) {
-        <ion-item lines="none">
-          <ion-label class="ion-text-center ion-padding">
-            <p>✨ No se encontraron tareas en el sistema.</p>
-          </ion-label>
-        </ion-item>
-      }
+
+      <ion-item *ngIf="isTasksLoading">
+        <ion-spinner name="crescent" slot="start"></ion-spinner>
+        <ion-label>Cargando tareas globales...</ion-label>
+      </ion-item>
 
       @for (task of allTasks; track task._id) {
-        <ion-item [class.completed]="task.completed">
+        <ion-item class="admin-task-item" [class.completed]="task.completed">
           <ion-icon slot="start" 
-                    [name]="task.completed ? 'checkmark-circle-outline' : 'time-outline'" 
-                    [color]="task.completed ? 'success' : 'warning'">
+            [name]="task.completed ? 'checkmark-circle-outline' : 'time-outline'" 
+            [color]="task.completed ? 'success' : 'primary'">
           </ion-icon>
 
           <ion-label class="ion-text-wrap">
             <h2>{{ task.title }}</h2>
-            <p>Usuario: <strong>{{ task.user?.username || 'Desconocido' }}</strong></p>
-            <p>Creada: {{ task.createdAt | date: 'short' }}</p>
-            <p>Estado: 
-                <ion-text [color]="task.completed ? 'success' : 'danger'">
-                    {{ task.completed ? 'Completa' : 'Pendiente' }}
-                </ion-text>
+            <p class="task-owner">
+              Dueño: 
+              <span class="username-text">
+                {{ task.user?.username || 'Usuario Eliminado' }}
+              </span>
             </p>
-            <p class="description-text">{{ task.description }}</p>
+            <p class="task-description">{{ task.description || 'Sin descripción' }}</p>
           </ion-label>
-          
+
           <ion-button slot="end" fill="clear" color="danger" (click)="deleteAdminTask(task)">
-              <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+            <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
           </ion-button>
         </ion-item>
       }
+      
+      @if (allTasks.length === 0 && !isTasksLoading) {
+        <ion-item>
+          <ion-label class="ion-text-center">No hay tareas registradas en el sistema.</ion-label>
+        </ion-item>
+      }
     </ion-list>
-  }
+  </div>
+
 </ion-content>

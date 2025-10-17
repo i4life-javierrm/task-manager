@@ -1,0 +1,134 @@
+// Archivo: src/app/admin/admin.page.scss
+
+// ------------------------------------
+// CABECERA Y SEGMENTO
+// ------------------------------------
+ion-header {
+  // Asegura que el segmento esté justo debajo de la barra principal
+  ion-toolbar[color="warning"] {
+    --background: var(--ion-color-warning);
+    
+    // Estilo del título
+    ion-title {
+      color: var(--ion-color-dark);
+      font-weight: bold;
+    }
+  }
+
+  // Estilo específico para el segmento
+  ion-segment {
+    --background: var(--ion-color-warning);
+    padding: 0 16px; 
+
+    // Botones del segmento
+    ion-segment-button {
+      color: var(--ion-color-dark);
+      --indicator-color: var(--ion-color-primary); // Indicador de color principal
+
+      &.segment-button-checked {
+        font-weight: 700;
+        // Cambiar el color del texto cuando está seleccionado
+        color: var(--ion-color-primary); 
+      }
+
+      ion-label {
+        font-size: 0.85rem;
+      }
+    }
+  }
+}
+
+// ------------------------------------
+// ESTILOS DE LISTAS (GENERAL)
+// ------------------------------------
+
+ion-list {
+  margin-top: 16px;
+  // Sombra suave para levantar la lista del fondo
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  --background: var(--ion-color-light);
+}
+
+// ------------------------------------
+// ESTILO DE TAREAS GLOBALES
+// ------------------------------------
+
+.admin-task-item {
+  --background: var(--ion-color-light);
+  border-left: 5px solid var(--ion-color-primary); // Borde primario para pendiente
+  margin-bottom: 0; // Sin margen entre items en la lista
+
+  &.completed {
+    border-left: 5px solid var(--ion-color-success); // Borde verde para completado
+    opacity: 1;
+  }
+  
+  // Título
+  h2 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  // Dueño de la tarea
+  .task-owner {
+    font-size: 0.7rem;
+    color: var(--ion-color-medium-shade);
+    margin: 0;
+  }
+
+  // Descripción de la tarea
+  .task-description {
+    font-size: 0.75rem;
+    color: var(--ion-color-dark-shade);
+    margin-top: 4px;
+    white-space: pre-wrap; // Preserva los saltos de línea y envuelve
+  }
+}
+
+// ------------------------------------
+// ESTILO DE USUARIOS
+// ------------------------------------
+
+ion-item:not(.admin-task-item) {
+  // Ajuste para el ícono de administrador/usuario
+  ion-icon[slot="start"] {
+    font-size: 1.2rem;
+  }
+
+  // Información del usuario
+  ion-label {
+    h2 {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    p {
+      font-size: 0.75rem;
+      color: var(--ion-color-medium-shade);
+    }
+  }
+
+  // Chip de rol
+  ion-chip {
+    font-size: 0.7rem;
+    height: 24px;
+  }
+}
+
+// ------------------------------------
+// ANIMACIONES
+// ------------------------------------
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

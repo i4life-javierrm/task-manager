@@ -1,49 +1,62 @@
-<ion-header [translucent]="true">
+<ion-header>
   <ion-toolbar>
-    <ion-title>Iniciar sesión</ion-title>
-  </ion-toolbar>
+    </ion-toolbar>
 </ion-header>
 
-<ion-content class="facebook-background">
-  <div class="login-container">
-    <ion-card class="login-box">
-      <ion-card-content>
-        <ion-item class="input-item">
-          <ion-input
-            [(ngModel)]="username"
-            placeholder="Correo electrónico"
-          />
-        </ion-item>
+<ion-content [fullscreen]="true" class="ion-padding auth-content">
+  
+  <div class="form-wrapper">
+    
+    <div class="auth-header">
+      <ion-icon name="checkbox-outline" class="app-logo"></ion-icon>
+      <h1>Task Manager</h1>
+      <h2>Inicia Sesión</h2>
+    </div>
 
-        <ion-item class="input-item">
-          <ion-input
-            [(ngModel)]="password"
-            type="password"
-            placeholder="Contraseña"
-          />
-        </ion-item>
+    <form (ngSubmit)="login()" #loginForm="ngForm">
+      
+      <ion-item>
+        <ion-icon slot="start" name="person-outline"></ion-icon>
+        <ion-input 
+          label="Usuario" 
+          labelPlacement="floating" 
+          type="text" 
+          name="username" 
+          [(ngModel)]="username" 
+          required>
+        </ion-input>
+      </ion-item>
 
-        <ion-button expand="full" color="primary" class="login-button" (click)="login()">
-          Iniciar sesión
+      <ion-item>
+        <ion-icon slot="start" name="lock-closed-outline"></ion-icon>
+        <ion-input 
+          label="Contraseña" 
+          labelPlacement="floating" 
+          type="password" 
+          name="password" 
+          [(ngModel)]="password" 
+          required>
+        </ion-input>
+      </ion-item>
+
+      <div class="ion-padding-top">
+        <ion-button 
+          expand="block" 
+          type="submit" 
+          [disabled]="loginForm.invalid || isLoading"
+          color="primary">
+          <ion-spinner *ngIf="isLoading" name="crescent"></ion-spinner>
+          <span *ngIf="!isLoading">Entrar</span>
         </ion-button>
+      </div>
+      
+    </form>
 
-        <!--<p class="forgot-password-link">
-          <a href="#">¿Olvidaste tu contraseña?</a>
-        </p>-->
+    <div class="ion-padding-top ion-text-center">
+      <ion-button fill="clear" (click)="goToRegister()" color="medium">
+        ¿No tienes cuenta? Regístrate aquí
+      </ion-button>
+    </div>
 
-        <div class="divider"></div>
-
-        <div class="create-account-button-wrapper">
-          <ion-button
-            expand="block"
-            _color="success"
-            class="create-account-button"
-            (click)="goToRegister()"
-          >
-            Crear cuenta nueva
-          </ion-button>
-        </div>
-      </ion-card-content>
-    </ion-card>
   </div>
 </ion-content>

@@ -1,0 +1,9 @@
+// Archivo: src/app/register/register.page.scss
+
+// 💥 CRÍTICO: Importar todos los estilos del Login para reutilizar el diseño
+@import '../login/login.page.scss';
+
+// Sobreescribe el color del ícono para diferenciar la página de registro
+.auth-header .app-logo {
+  color: var(--ion-color-success); 
+}

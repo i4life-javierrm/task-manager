@@ -1,0 +1,81 @@
+// Archivo: src/app/login/login.page.scss
+
+ion-content{
+  width: 100%;
+}
+
+.auth-content {
+    // 1. Centrar el contenido
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    // 2. Darle un fondo al content para que sea visible en modo oscuro
+    --background: var(--ion-background-color, #f4f5f8);
+  }
+  
+  .form-wrapper {
+    // Limitar el ancho en pantallas grandes (desktop)
+    max-width: 400px; 
+    width: 100%;
+    padding: 15px;
+    margin: auto;
+    // Sombra y fondo para que parezca una "tarjeta" en el centro
+    background: var(--ion-color-light, white); 
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+  }
+  
+  // ------------------------------------
+  // Estilos del Encabezado/Logo
+  // ------------------------------------
+  .auth-header {
+    text-align: center;
+    margin-bottom: 20px;
+  
+    .app-logo {
+      font-size: 3.2rem;
+      color: var(--ion-color-primary);
+      margin-bottom: 10px;
+    }
+    
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--ion-color-dark);
+      margin: 0;
+    }
+  
+    h2 {
+      font-size: 1rem;
+      font-weight: 400;
+      color: var(--ion-color-medium);
+      margin-top: 5px;
+    }
+  }
+  
+  // ------------------------------------
+  // Estilos del Formulario
+  // ------------------------------------
+  
+  ion-item {
+    // Dar un ligero borde redondeado y espaciado a los inputs
+    --border-radius: 8px;
+    --border-color: var(--ion-color-medium-tint);
+    --border-width: 1px;
+    --min-height: 45px;
+    margin-bottom: 8px;
+  }
+  
+  // Íconos dentro del input
+  ion-item ion-icon {
+    color: var(--ion-color-medium);
+    margin-right: 8px;
+  }
+  
+  // Botón principal
+  ion-button[type="submit"] {
+    height: 48px;
+    font-size: 1rem;
+    font-weight: 600;
+  }

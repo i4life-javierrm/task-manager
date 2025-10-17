@@ -1,14 +1,39 @@
+/*¡Es una excelente pregunta y un paso crucial en la estilización! 👍
+
+**No, no debes borrar todo**, pero **sí debemos simplificarlo**.
+
+El archivo `global.scss` contiene dos tipos de código que son **esenciales** para que tu aplicación Ionic funcione correctamente y se vea bien:
+
+### 1. Las Importaciones de Ionic (¡Necesarias!)
+
+Tu archivo `global.scss` importa los archivos CSS base de Ionic. Estos son los que dan estilo y funcionalidad a componentes como `ion-button`, `ion-card`, y el sistema de *grid*.
+
+**No debes eliminar las líneas `@import`** de los archivos de Ionic (como `core.css`, `typography.css`, etc.).
+
+### 2. Estilos Globales (¡A Simplificar!)
+
+Tu archivo también contiene estilos globales, incluyendo una sección para asegurar que **`ngx-toastr`** se muestre correctamente sobre la interfaz de Ionic.
+
+Es una buena práctica de Angular/Ionic mantener los estilos lo más localizados posible (en `home.page.scss`, `admin.page.scss`, etc.).
+
+---
+
+## 🧹 Propuesta de Limpieza para `global.scss`
+
+Vamos a eliminar los estilos personalizados que añadimos a `ion-card`, `ion-item`, y cualquier otro estilo que no sea estrictamente global, manteniendo solo las importaciones de Ionic y la configuración de `ngx-toastr`.
+
+**Reemplaza el contenido de tu archivo `global.scss` con esta versión limpia:**
+
+```scss*/
 /*
  * App Global CSS
  * ----------------------------------------------------------------------------
- * Put style rules here that you want to apply globally. These styles are for
- * the entire app and not just one component. Additionally, this file can be
- * used as an entry point to import other CSS/Sass files to be included in the
- * output CSS.
- * For more information on global stylesheets, visit the documentation:
- * https://ionicframework.com/docs/layout/global-stylesheets
+ * Estilos base y de configuración que afectan a toda la aplicación.
  */
 
+// --------------------------------------------------------
+// 1. IMPORTACIONES DE IONIC (NO BORRAR)
+// --------------------------------------------------------
 /* Core CSS required for Ionic components to work properly */
 @import "@ionic/angular/css/core.css";
 
@@ -28,268 +53,42 @@
 /**
  * Ionic Dark Mode
  * -----------------------------------------------------
- * For more info, please see:
- * https://ionicframework.com/docs/theming/dark-mode
+ * Mantenemos la importación del modo oscuro.
  */
-
-/* @import "@ionic/angular/css/palettes/dark.always.css"; */
-/* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import "@ionic/angular/css/palettes/dark.system.css";
 
 
-/* ------------------------------------------------------------------------- */
-/* --- MINIMAL NGX-TOASTR OVERRIDES FOR IONIC FRAMEWORK --- */
-/* ------------------------------------------------------------------------- */
+// --------------------------------------------------------
+// 2. NGX-TOASTR OVERRIDES (CRÍTICO: No borrar si usas Toastr)
+// --------------------------------------------------------
 
 /* 1. Global Container Fixes: Ensures it appears above Ionic and is positioned */
 #toast-container {
     z-index: 99999 !important; /* Must be extremely high */
-    
     /* Ensure correct positioning for 'toast-bottom-right' */
-    top: auto !important;
-    left: auto !important;
-    right: 12px !important;
-    bottom: 12px !important; 
-    
-    /* Max size constraints for non-full-screen toasts */
-    width: auto !important; 
-    max-width: 90% !important; 
-    height: auto !important; 
+    position: fixed;
+    bottom: 0;
+    right: 0;
 }
 
-/* 2. Individual Toast Body Styling: Minimal look and feel */
-#toast-container > div {
-    background-color: #333 !important; 
-    opacity: 1 !important;             
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.4) !important; 
-    border-radius: 4px !important;
-    padding: 12px !important; 
-    min-width: 250px !important;
-    max-width: 350px !important; 
+/* 2. Style Adjustments (Optional but recommended for Ionic look) */
+.toast-success {
+    background-color: var(--ion-color-success) !important;
 }
-
-
-/* 3. Close Button Fixes: Positioning and removes the redundant span */
-.toast-close-button {
-    position: absolute !important;
-    right: 5px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important; /* Vertical centering */
-    width: 20px !important; 
-    height: 20px !important;
-    color: #fff !important; 
-    opacity: 0.8 !important;
+.toast-error {
+    background-color: var(--ion-color-danger) !important;
 }
-
-/* 3.1. Hide the redundant close button element (fixes the "two X's" issue) */
-.toast-close-button > span {
-    display: none !important; 
-}
-
-/* 4. CRITICAL FIX: Ensure Title and Message text don't overlap the 'X' button */
-.toast-title, .toast-message {
-    /* Push the text content away from the right edge */
-    padding-right: 40px !important; 
-    color: white !important;
-}
-
-.toast-title {
-    padding-left: 15%;
-    font-weight: bold !important;
-    font-size: 14px !important; 
-}
-
-.toast-message {
-    padding-left: 15%;
-    font-size: 13px !important;
-    margin-top: 2px !important;
-}
-
-/* ------------------------------------------------------------------------- */
-
-
-
-// --------------------------------------------------------
-// FACEBOOK-LIKE LOGIN STYLES
-// --------------------------------------------------------
-
-// Global background color for auth pages
-.facebook-background {
-    --background: #f0f2f5;
-}
-
-body {
-    background-color: #f0f2f5; 
-}
-ion-app {
-    // Ensures all Ionic elements inside the app respect this background
-    --background: #f0f2f5;
-}
-
-// Container to center the box both horizontally and vertically
-.login-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%; 
-    padding: 20px;
-}
-
-.login-box {
-    width: 100%;
-    max-width: 396px; // Standard Facebook login box width
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.1); 
-    border-radius: 8px;
-    margin: 0; // Remove default ion-card margins
-}
-
-// Custom style for inputs to look like Facebook's
-.input-item {
-    --padding-start: 14px;
-    --inner-padding-end: 14px;
-    --inner-padding-top: 10px;
-    --inner-padding-bottom: 10px;
-    margin-bottom: 12px;
-    border: 1px solid #dddfe2;
-    border-radius: 6px;
-    --background: #ffffff;
-    --highlight-color-focused: #1877f2; // Facebook blue focus
-    
-    // Set a good height for the input fields
-    ion-input {
-        min-height: 48px;
-        font-size: 17px;
-    }
-}
-
-// Primary Login Button (Blue)
-.login-button {
-    height: 48px; 
-    font-size: 17px;
-    font-weight: bold;
-    margin-top: 15px;
-    text-transform: capitalize; // Don't force uppercase
-}
-
-// Forgot Password Link
-.forgot-password-link {
-    text-align: center;
-    margin-top: 10px;
-    margin-bottom: 15px;
-
-    a {
-        color: var(--ion-color-primary, #1877f2); 
-        text-decoration: none;
-        font-size: 14px;
-        &:hover {
-            text-decoration: underline;
-        }
-    }
-}
-
-// Divider line
-.divider {
-    border-bottom: 1px solid #dadde1;
-    margin: 20px 0;
-}
-
-// Wrapper for the green button to center it
-.create-account-button-wrapper {
-    text-align: center;
-}
-
-// Create Account Button (Green)
-.create-account-button {
-    --background: #42b72a; // Facebook's green
-    --background-activated: #36a420;
-    height: 48px;
-    font-size: 17px;
-    --color:#fff;
-    text-transform: capitalize;
-    font-weight: bold;
-    //max-width: 200px; // Make it narrower
-    margin: 0 auto; // Center the button within its wrapper
-}
-
-// Standard Link Button (for "Already have an account?" text)
-.link-button {
-    --padding-start: 0;
-    --padding-end: 0;
-    font-size: 14px;
-    font-weight: normal;
-    text-transform: none;
-    height: auto; // Allow button height to adjust to text
-    margin-top: 10px;
-}
-
-
-
-
-
-
-
-/*
-
-.center-content {
-    height: 100%; 
-    // Apply flexbox to the ion-grid
-    display: flex;
-    // Align content vertically to the center
-    align-items: center; 
-    // Optional: Align content horizontally (redundant with ion-justify-content-center on ion-row, but safer)
-    //justify-content: center;
+.toast-warning {
+    background-color: var(--ion-color-warning) !important;
 }
 
 // --------------------------------------------------------
-// 1. STYLES FOR THE AUTH FORM COLUMN CONTAINER
+// 3. ESTILOS GLOBALES MÍNIMOS (Opcional)
 // --------------------------------------------------------
-.auth-form-column {
-    // Add Ionic's built-in padding for top/bottom spacing on the form block
-    padding-top: var(--ion-padding-vertical);
-    padding-bottom: var(--ion-padding-vertical);
-    text-align: center; 
-    
-    // Set the inner <div> to have a defined layout to manage spacing
-    > div {
-        display: flex;
-        flex-direction: column;
-        
-        // This makes the entire form block sit closer to the center if there's 
-        // a lot of space, preventing the "clumped at the top" look.
-        justify-content: center; 
-    }
-    
-    // --------------------------------------------------------
-    // 3. SPACING BETWEEN COMPONENTS
-    // --------------------------------------------------------
-    
-    // Apply a bottom margin to every element (ion-item and ion-button)
-    // inside the form wrapper. We'll use a larger margin for clearer separation.
-    > div > * {
-        margin-bottom: var(--ion-margin-md, 16px); // Use medium margin for better spacing
-        
-        // Remove the margin from the very last element (the "Register" button)
-        &:last-child {
-            margin-bottom: 0;
-        }
-    }
-    
-    // Optional: Target the secondary button specifically to add a small gap above it
-    ion-button[fill="clear"] {
-        margin-top: var(--ion-margin-sm, 8px); 
-    }
-}
+// Si tienes un estilo de fuente general o algo que afecte a TODAS las páginas.
+// Dejamos esto vacío por ahora.
 
-// --------------------------------------------------------
-// 3. GLOBAL-LEVEL STYLES (Keep only what's necessary)
-// --------------------------------------------------------
-
-// This style is required to vertically center the whole grid in the ion-content
-// and should ideally be in a global file or the component's SCSS if used only here.
 .center-content {
     height: 100%; 
     display: grid;
-    // Removed 'place-items: center' as requested
 }
-    
-    */

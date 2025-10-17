@@ -1,43 +1,74 @@
-<ion-header [translucent]="true">
+<ion-header>
   <ion-toolbar>
-    <ion-title>Registrarse</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="facebook-background">
-  <div class="login-container">
-    <ion-card class="login-box">
-      <ion-card-content>
-        <ion-item class="input-item">
-          <ion-input [(ngModel)]="username" placeholder="Correo electrónico" />
-        </ion-item>
+<ion-content [fullscreen]="true" class="ion-padding auth-content">
+  
+  <div class="form-wrapper">
+    
+    <div class="auth-header">
+      <ion-icon name="add-circle-outline" class="app-logo"></ion-icon>
+      <h1>Task Manager</h1>
+      <h2>Crea tu Cuenta</h2>
+    </div>
 
-        <ion-item class="input-item">
-          <ion-input
-            [(ngModel)]="password"
-            type="password"
-            placeholder="Contraseña"
-          />
-        </ion-item>
-        
-        <ion-button expand="full" color="primary" class="login-button" (click)="register()">
-          Registrar
+    <form (ngSubmit)="register()" #registerForm="ngForm">
+      
+      <ion-item>
+        <ion-icon slot="start" name="person-outline"></ion-icon>
+        <ion-input 
+          label="Usuario" 
+          labelPlacement="floating" 
+          type="text" 
+          name="username" 
+          [(ngModel)]="username" 
+          required>
+        </ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-icon slot="start" name="lock-closed-outline"></ion-icon>
+        <ion-input 
+          label="Contraseña" 
+          labelPlacement="floating" 
+          type="password" 
+          name="password" 
+          [(ngModel)]="password" 
+          required>
+        </ion-input>
+      </ion-item>
+      
+      <ion-item>
+        <ion-icon slot="start" name="repeat-outline"></ion-icon>
+        <ion-input 
+          label="Confirmar Contraseña" 
+          labelPlacement="floating" 
+          type="password" 
+          name="confirmPassword" 
+          [(ngModel)]="confirmPassword" 
+          required>
+        </ion-input>
+      </ion-item>
+
+      <div class="ion-padding-top">
+        <ion-button 
+          expand="block" 
+          type="submit" 
+          [disabled]="registerForm.invalid || isLoading"
+          color="primary">
+          <ion-spinner *ngIf="isLoading" name="crescent"></ion-spinner>
+          <span *ngIf="!isLoading">Registrarse</span>
         </ion-button>
-        
-        <div class="divider"></div>
+      </div>
+      
+    </form>
 
-        <div class="create-account-button-wrapper">
-          <ion-button
-            expand="block"
-            fill="clear"
-            color="primary"
-            class="link-button"
-            (click)="goToLogin()"
-          >
-            ¿Ya tienes una cuenta? Iniciar sesión
-          </ion-button>
-        </div>
-      </ion-card-content>
-    </ion-card>
+    <div class="ion-padding-top ion-text-center">
+      <ion-button fill="clear" (click)="goToLogin()" color="medium">
+        Volver al Inicio de Sesión
+      </ion-button>
+    </div>
+
   </div>
 </ion-content>

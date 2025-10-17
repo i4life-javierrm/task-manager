@@ -1,121 +1,88 @@
-/* home.page.scss */
+// Archivo: src/app/home/home.page.scss
 
-/* --- Global Layout and Centering --- */
-
-.facebook-background {
-  --background: #f0f2f5; 
-}
-
-/* CRITICAL: Centering and width for desktop view */
-ion-content {
-  max-width: 40%;
-  align-self: center;
-}
-
+// ------------------------------------
+// TEMA BASE: Colores y tipografía
+// ------------------------------------
 ion-title {
-  font-weight: 600;
-  color: var(--ion-color-dark);
+  font-weight: 700;
 }
 
-/* --- List Structure Styles --- */
+// ------------------------------------
+// ESTILO DE TAREAS Y ESTADOS
+// ------------------------------------
 
-ion-list-header {
-  --background: transparent;
-  --border-width: 0;
-  
-  font-size: 1.2em;
-  font-weight: bold;
-  color: var(--ion-color-dark);
-  
-  /* Adds space between the list header and the list items/cards */
-  margin-bottom: 5px; 
+// Estilo para items completados
+ion-item.completed {
+  // Aplicar un color de fondo ligero para diferenciar
+  opacity: 1;
+
+  // Efecto visual de 'tachado'
+  ion-label h2 {
+    text-decoration: line-through;
+    color: var(--ion-color-medium-shade);
+  }
 }
 
-ion-list {
-  --background: transparent;
-  --border-radius: 0;
-  --border-width: 0;
-  --box-shadow: none;
-  padding: 0; 
-  margin: 0; 
-  /* Crucially, set a bottom margin to make the task cards float correctly */
-  margin-bottom: 20px; 
-}
+// Estilo para el contenedor de la descripción
+.description-container {
+  margin-top: 4px;
+  margin-bottom: 4px;
 
-/* --- Input Fix for Required/Initial State --- */
-/* 🚀 FIX V2: Use a stronger selector to override Ionic's default red/danger color 
-   for the required input's label when it is initially empty (ng-invalid). */
-ion-item:first-of-type.ng-invalid {
-    /* Set the border/highlight color to a neutral color */
-    --highlight-color-invalid: var(--ion-color-medium);
+  ion-textarea {
+    // Estilo base de la descripción no editable
+    --padding-start: 0;
+    --padding-end: 0;
+    --padding-top: 0;
+    --padding-bottom: 0;
+    color: var(--ion-color-dark);
+    font-size: 0.85rem;
+    line-height: 1.3;
     
-    /* CRITICAL: Override the floating label color itself */
-    --color-focused: var(--ion-color-primary);
-    --color-invalid: var(--ion-color-medium);
+    // Quitar el borde por defecto de ion-textarea
+    border: none;
+    background: transparent;
+
+    &[disabled] {
+      // Si está deshabilitado (no en modo edición), usar un color más claro
+      color: var(--ion-color-medium);
+      pointer-events: none; // Evita el cursor de texto
+    }
+  }
 }
 
-ion-item:first-of-type.item-has-focus {
-    /* Fallback for when it has focus, ensuring a primary color highlight */
-    --highlight-color-invalid: var(--ion-color-primary);
+// Estilos para el texto de fecha/estado
+.date-text, .pending-status, .completed-date {
+  font-size: 0.75rem;
+  margin: 0;
+  padding: 0;
 }
 
-
-/* --- Task Card Styles (Including H2 and Description) --- */
-
-.completed {
-  text-decoration: line-through;
-  color: var(--ion-color-medium);
-}
-
-/* 🚀 NEW: Styling for date labels */
-.date-label {
-  font-size: 0.75em;
+.date-text {
   color: var(--ion-color-medium-shade);
-  margin-top: 2px;
-  margin-bottom: 0;
+}
+
+.pending-status {
+  color: var(--ion-color-primary);
+  font-weight: 500;
 }
 
 .completed-date {
-  color: var(--ion-color-success); /* Highlight completion date in green */
+  color: var(--ion-color-success);
   font-weight: 500;
 }
-/* END NEW */
 
-
-.task-description {
-  font-size: 0.85em;
-  color: var(--ion-color-medium-shade);
-  margin-top: 2px;
-  padding-left: 2px;
-  border-left: 3px solid var(--ion-color-tertiary);
+// ------------------------------------
+// ESTILO DEL FORMULARIO DE AÑADIR
+// ------------------------------------
+ion-card ion-item {
+  // Quitar el padding horizontal para que se alinee con el borde de la tarjeta
+  --padding-start: 0;
+  --inner-padding-end: 0;
 }
 
-.task-card {
-  margin-left: 0;
-  margin-right: 0;
-  /* Make sure the bottom margin is slightly larger to push away from any lingering list borders/shadows */
-  margin-bottom: 15px; 
-  
-  background: white; 
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); 
-  border-radius: 8px;
-
-  /* Explicitly target the last card and remove its bottom margin */
-  &:last-of-type {
-    margin-bottom: 0; 
-  }
-
-  // Ensure the ion-item inside the card is clean and uses your preferred padding
-  ion-item {
-    --padding-start: 0;
-    --inner-padding-end: 0;
-    --inner-padding-start: 16px; /* Your desired padding */
-    --min-height: 60px; 
-    border-radius: 8px;
-
-    h2 {
-      font-weight: 500; /* Your desired font-weight */
-      font-size: 1.1em; /* Your desired font-size */
-    }
-  }
+// Efecto sutil de sombra y borde redondeado
+ion-item {
+  --border-radius: 8px;
+  --box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  margin-bottom: 8px;
 }

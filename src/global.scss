@@ -92,3 +92,7 @@ Vamos a eliminar los estilos personalizados que añadimos a `ion-card`, `ion-ite
     height: 100%; 
     display: grid;
 }
+
+ion-toolbar {
+    --title-align: center;
+}

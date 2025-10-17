@@ -82,7 +82,42 @@ ion-card ion-item {
 
 // Efecto sutil de sombra y borde redondeado
 ion-item {
-  --border-radius: 8px;
+  --border-radius: 4px;
   --box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  margin-bottom: 8px;
+}
+
+// ------------------------------------
+// 💥 CORRECCIÓN DE CENTRADO 💥
+// ------------------------------------
+ion-content {
+  // 1. Aseguramos que el content no tenga padding horizontal que interfiera con el centrado.
+  // 💥 FIX: Eliminar el padding horizontal que empuja el contenido.
+  --padding-start: 0; 
+  --padding-end: 0;
+  // Mantener el padding superior e inferior si se desea, o establecerlo a 0
+  --padding-top: 16px; 
+  --padding-bottom: 16px;
+  
+  // 2. Centrar el contenido horizontalmente (funciona ahora que no hay padding)
+  display: flex;
+  justify-content: center; // Centrado horizontal
+}
+
+// ------------------------------------
+// Estilos del Wrapper
+// ------------------------------------
+.task-content-wrapper {
+  width: 100%; 
+  
+  // 💥 FIX: Aplicar el padding de vuelta aquí para que no interfiera con el centrado del padre.
+  padding: 0 16px; // Padding horizontal interno de 16px para móvil
+
+  // Usar una media query para aplicar el 50% rule SÓLO en pantallas grandes
+  @media (min-width: 768px) {
+    // CRITICAL CHANGE: Set max width to 50% of the screen
+    max-width: 50vw; 
+    margin: auto;
+    // Opción: Poner padding a 0 en desktop si la tarjeta ya tiene margen, pero es mejor dejarlo así.
+    padding: 0;
+  }
 }

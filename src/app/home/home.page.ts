@@ -1,3 +1,4 @@
+// File: home.page.ts
 import { Component, OnInit, inject } from '@angular/core'; 
 import { TaskService, Task } from '../services/task.service'; 
 import { IonicModule, AlertController } from '@ionic/angular'; 
@@ -42,10 +43,10 @@ export class HomePage implements OnInit {
  
   loadTasks() { 
     this.taskService.getTasks().subscribe({
-      next: (tasks) => {
+      next: (tasks: Task[]) => { // ✅ TIPADO
         this.tasks = tasks;
       },
-      error: (error) => {
+      error: (error: any) => { // ✅ TIPADO
         console.error('Error al cargar tareas:', error);
         if (error.status === 401) {
           this.authService.logout();
@@ -55,7 +56,13 @@ export class HomePage implements OnInit {
     });
   } 
 
+  // ✅ FIX: Método añadido para resolver el error de home.page.html
+  goToAdmin() {
+    this.router.navigateByUrl('/admin');
+  }
+
   addTask() {
+    // ✅ LLAMADA A showWarning CORREGIDA
     if (!this.newTaskTitle.trim()) {
       this.toastService.showWarning('El título de la tarea es obligatorio.', 'Falta Título');
       return;
@@ -67,14 +74,15 @@ export class HomePage implements OnInit {
       completed: false
     };
 
+    // ✅ LLAMADA A createTask CORREGIDA
     this.taskService.createTask(newTask).subscribe({
-      next: (task) => {
+      next: (task: Task) => { // ✅ TIPADO
         this.tasks.unshift(task); 
         this.newTaskTitle = '';
         this.newTaskDescription = '';
         this.toastService.showSuccess('Tarea creada correctamente.', 'Creación Exitosa');
       },
-      error: (error) => {
+      error: (error: any) => { // ✅ TIPADO
         console.error('Error al crear tarea:', error);
         this.toastService.showError('No se pudo crear la tarea. Inténtelo de nuevo.', 'Error');
       }
@@ -82,17 +90,25 @@ export class HomePage implements OnInit {
   }
 
   toggleTaskCompletion(task: Task) {
-    const updatedTask = { ...task, completed: !task.completed };
+    // La lógica de actualización del estado de completado se traslada aquí
+    const updatedTask: Task = { 
+        ...task, 
+        completed: !task.completed,
+        // Agrega la fecha de completado si se completa
+        completedAt: !task.completed ? new Date().toISOString() : null
+    };
 
+    // ✅ LLAMADA A updateTask CORREGIDA
     this.taskService.updateTask(updatedTask).subscribe({
-      next: (response) => {
+      next: (response: Task) => { // ✅ TIPADO
         const index = this.tasks.findIndex(t => t._id === task._id);
         if (index > -1) {
-          this.tasks[index] = response;
+          // Aseguramos que la tarea en la lista se actualice con la respuesta del servidor
+          this.tasks[index] = response; 
           this.toastService.showSuccess(`Tarea marcada como ${response.completed ? 'completa' : 'pendiente'}.`, 'Actualización Exitosa');
         }
       },
-      error: (error) => {
+      error: (error: any) => { // ✅ TIPADO
         console.error('Error al actualizar tarea:', error);
         this.toastService.showError('No se pudo actualizar la tarea.', 'Error de Actualización');
       }
@@ -118,7 +134,7 @@ export class HomePage implements OnInit {
                 this.tasks = this.tasks.filter(t => t._id !== task._id);
                 this.toastService.showSuccess('Tarea eliminada correctamente.', 'Eliminación Exitosa');
               },
-              error: (error) => {
+              error: (error: any) => { // ✅ TIPADO
                 console.error('Error al eliminar tarea:', error);
                 let errorMessage = 'No se pudo eliminar la tarea.';
                 if (error.status === 404 || error.status === 403) { 

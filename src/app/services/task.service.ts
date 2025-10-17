@@ -1,3 +1,4 @@
+// File: task.service.ts
 import { Injectable } from '@angular/core'; 
 import { HttpClient } from '@angular/common/http'; 
 import { Observable } from 'rxjs'; 
@@ -25,13 +26,15 @@ export class TaskService {
     return this.http.get<Task[]>(this.apiUrl); 
   } 
 
-  // 🚀 FIX: Ensure addTask accepts description
-  addTask(title: string, description: string): Observable<Task> { 
-    return this.http.post<Task>(this.apiUrl, { title, description }); 
+  // ✅ FIX/IMPROVEMENT: Renombrado de addTask a createTask para mayor claridad
+  // y acepta un objeto Partial<Task> para la creación.
+  createTask(newTask: Partial<Task>): Observable<Task> { 
+    return this.http.post<Task>(this.apiUrl, newTask); 
   }
 
-  toggleTask(id: string): Observable<Task> { 
-    return this.http.put<Task>(`${this.apiUrl}/${id}`, {}); 
+  // ✅ FIX: Se elimina toggleTask y se añade un updateTask más versátil.
+  updateTask(task: Task): Observable<Task> { 
+    return this.http.put<Task>(`${this.apiUrl}/${task._id}`, task); 
   } 
  
   deleteTask(id: string): Observable<any> { 

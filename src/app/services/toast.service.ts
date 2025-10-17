@@ -33,4 +33,15 @@ export class ToastService {
       timeOut: 3000
     });
   }
+
+  /**
+   * Displays a warning toast.
+   * @param message The main content of the toast.
+   * @param title The title of the toast (e.g., 'Advertencia').
+   */
+  showWarning(message: string, title: string = 'Advertencia') {
+    this.toastr.warning(message, title, {
+      timeOut: 4000
+    });
+  }
 }

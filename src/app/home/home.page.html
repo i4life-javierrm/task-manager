@@ -2,14 +2,12 @@
   <ion-toolbar>
     <ion-title>Lista de Tareas</ion-title>
 
-    <!-- 🚀 BOTÓN DE ADMINISTRACIÓN: Visible solo para administradores -->
     <ion-buttons slot="primary" *ngIf="isAdminUser">
       <ion-button (click)="goToAdmin()">
         <ion-icon name="shield-half-outline" slot="icon-only" color="primary"></ion-icon>
       </ion-button>
     </ion-buttons>
 
-    <!-- BOTÓN DE CERRAR SESIÓN -->
     <ion-buttons slot="end">
       <ion-button (click)="logout()">
         <ion-icon name="log-out-outline" slot="icon-only" color="danger"></ion-icon>
@@ -20,7 +18,6 @@
 
 <ion-content [fullscreen]="true" class="ion-padding">
 
-  <!-- FORMULARIO DE AÑADIR TAREA -->
   <ion-card class="ion-margin-bottom">
     <ion-card-header>
       <ion-card-title>Nueva Tarea</ion-card-title>
@@ -29,63 +26,98 @@
       <ion-item>
         <ion-input label="Título" labelPlacement="stacked" [(ngModel)]="newTaskTitle" required placeholder="Ej. Comprar pan"></ion-input>
       </ion-item>
-      <ion-item lines="none">
-        <ion-textarea label="Descripción (Opcional)" labelPlacement="stacked" [(ngModel)]="newTaskDescription" rows="3" placeholder="Detalles de la tarea..."></ion-textarea>
+      <ion-item>
+        <ion-textarea label="Descripción (Opcional)" labelPlacement="stacked" autoGrow="true" [(ngModel)]="newTaskDescription" placeholder="Detalles de la tarea..."></ion-textarea>
       </ion-item>
-      <ion-button expand="block" class="ion-margin-top" (click)="addTask()" [disabled]="!newTaskTitle">
+
+      <ion-button expand="block" class="ion-margin-top" (click)="addTask()" [disabled]="!newTaskTitle.trim()">
+        <ion-icon name="add-circle-outline" slot="start"></ion-icon>
         Añadir Tarea
       </ion-button>
     </ion-card-content>
   </ion-card>
 
-  <!-- LISTA DE TAREAS -->
-  <ion-list *ngIf="tasks.length > 0; else noTasks">
-    <ion-item *ngFor="let task of tasks" lines="full" class="task-item" [class.completed]="task.completed">
-      
-      <!-- CHECKBOX (Inicio del Item) -->
-      <ion-checkbox slot="start" [checked]="task.completed" (ionChange)="toggleTaskCompletion(task)">
-      </ion-checkbox>
-
-      <!-- ETIQUETAS DE TEXTO (Centro del Item) -->
-      <ion-label>
-        <h2>{{ task.title }}</h2>
-        
-        <!-- Fecha de Creación -->
-        <p class="date-text">
-          Creada: {{ task.createdAt | date: 'shortDate' }}
-        </p>
-        
-        <!-- ESTADO COMPLETADO Y FECHA -->
-        <p [class.completed-date]="task.completed" [class.pending-status]="!task.completed">
-          Completada: 
-          <span *ngIf="task.completedAt; else pendingStatus">
-             {{ task.completedAt | date: 'shortDate' }}
-          </span>
-          <ng-template #pendingStatus>
-             No
-          </ng-template>
-        </p>
-
-        <!-- Descripción (si existe) -->
-        <p class="description-text">{{ task.description }}</p>
-
-      </ion-label>
-
-      <!-- BOTÓN DE ELIMINAR (Final del Item) -->
-      <ion-button slot="end" fill="clear" color="danger" (click)="deleteTask(task)">
-        <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+  <ion-list [inset]="true" *ngIf="tasks.length > 0; else noTasks">
+    <ion-list-header>
+      <ion-label>Tareas Pendientes ({{ pendingTasks.length }})</ion-label>
+      <ion-button (click)="loadTasks()" fill="clear" color="primary">
+        <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
       </ion-button>
-    </ion-item>
+    </ion-list-header>
+
+    @for (task of tasks; track task._id) {
+      <ion-item [class.completed]="task.completed">
+
+        <ion-checkbox slot="start" [checked]="task.completed" (ionChange)="toggleTaskCompletion(task)">
+        </ion-checkbox>
+
+        <ion-label>
+          <h2>{{ task.title }}</h2>
+          
+          <p class="date-text">
+            Creada: {{ task.createdAt | date: 'shortDate' }}
+          </p>
+          
+          <p [class.completed-date]="task.completed" [class.pending-status]="!task.completed">
+            Completada: 
+            <span *ngIf="task.completedAt; else pendingStatus">
+               {{ task.completedAt | date: 'shortDate' }}
+            </span>
+            <ng-template #pendingStatus>
+               No
+            </ng-template>
+          </p>
+
+          <div class="description-container">
+            <ion-textarea
+              placeholder="Añadir descripción..."
+              autoGrow="true"
+              rows="1"
+              [(ngModel)]="task.description"
+              [disabled]="!isEditing(task._id) || task.completed"
+              class="description-textarea"
+            ></ion-textarea>
+          </div>
+
+        </ion-label>
+
+        <ion-buttons slot="end">
+          
+          <ion-button 
+            *ngIf="isEditing(task._id)" 
+            fill="clear" 
+            color="success" 
+            (click)="saveDescription(task)"
+          >
+            <ion-icon name="save-outline" slot="icon-only"></ion-icon>
+          </ion-button>
+
+          <ion-button 
+            fill="clear" 
+            [color]="isEditing(task._id) ? 'medium' : 'primary'" 
+            (click)="toggleEditMode(task._id)" 
+            [disabled]="task.completed"
+          >
+            <ion-icon 
+              [name]="isEditing(task._id) ? 'close-circle-outline' : 'create-outline'" 
+              slot="icon-only"
+            ></ion-icon>
+          </ion-button>
+
+          <ion-button fill="clear" color="danger" (click)="deleteTask(task)">
+            <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-item>
+    }
   </ion-list>
 
-  <!-- TEMPLATE: Si no hay tareas -->
   <ng-template #noTasks>
-    <div class="ion-text-center ion-padding-top">
-      <ion-text color="medium">
-        <ion-icon name="happy-outline" size="large"></ion-icon>
-        <p>¡No tienes tareas pendientes!</p>
-      </ion-text>
-    </div>
+    <ion-card class="ion-margin-top ion-text-center">
+      <ion-card-content>
+        <p>No tienes tareas pendientes. ¡Añade una ahora!</p>
+      </ion-card-content>
+    </ion-card>
   </ng-template>
 
 </ion-content>

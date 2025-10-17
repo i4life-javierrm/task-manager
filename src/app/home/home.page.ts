@@ -1,11 +1,10 @@
-// File: home.page.ts
 import { Component, OnInit, inject } from '@angular/core'; 
 import { TaskService, Task } from '../services/task.service'; 
 import { IonicModule, AlertController } from '@ionic/angular'; 
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { AuthService } from '../services/auth.service'; // 👈 Usamos la versión actualizada
+import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router'; 
 import { ToastService } from '../services/toast.service'; 
  
@@ -24,8 +23,10 @@ export class HomePage implements OnInit {
   tasks: Task[] = []; 
   newTaskTitle: string = ''; 
   newTaskDescription: string = '';
-  // NEW STATE VARIABLE: Para mostrar el botón de Admin
   isAdminUser: boolean = false; 
+
+  // 🚀 NUEVA PROPIEDAD: ID de la tarea que se está editando
+  editingTaskId: string | null = null; 
 
   private taskService = inject(TaskService);
   private authService = inject(AuthService);
@@ -37,81 +38,117 @@ export class HomePage implements OnInit {
  
   ngOnInit() { 
     this.loadTasks(); 
-    // 💥 FIX: Usar 'isAdmin' como propiedad (sin paréntesis)
     this.isAdminUser = this.authService.isAdmin; 
   } 
  
   loadTasks() { 
-    this.taskService.getTasks().subscribe({
-      next: (tasks: Task[]) => { // ✅ TIPADO
-        this.tasks = tasks;
-      },
-      error: (error: any) => { // ✅ TIPADO
-        console.error('Error al cargar tareas:', error);
-        if (error.status === 401) {
-          this.authService.logout();
-        }
-        this.toastService.showError('Error al cargar las tareas.', 'Error');
-      }
-    });
-  } 
-
-  // ✅ FIX: Método añadido para resolver el error de home.page.html
-  goToAdmin() {
-    this.router.navigateByUrl('/admin');
+    this.taskService.getTasks().subscribe({ 
+      next: (tasks) => { 
+        this.tasks = tasks; 
+      }, 
+      error: (error) => { 
+        console.error('Error al cargar tareas:', error); 
+        this.toastService.showError('Error al cargar tareas.', 'Error');
+      } 
+    }); 
   }
 
-  addTask() {
-    // ✅ LLAMADA A showWarning CORREGIDA
-    if (!this.newTaskTitle.trim()) {
-      this.toastService.showWarning('El título de la tarea es obligatorio.', 'Falta Título');
-      return;
+  // 🚀 CÁLCULO DE TAREAS PENDIENTES
+  get pendingTasks(): Task[] {
+    return this.tasks.filter(t => !t.completed);
+  }
+
+  // 🚀 NUEVOS MÉTODOS DE EDICIÓN DE DESCRIPCIÓN
+
+  // Verifica si la tarea actual está siendo editada
+  isEditing(taskId: string | undefined): boolean {
+    return taskId === this.editingTaskId;
+  }
+
+  // Activa/Desactiva el modo de edición
+  toggleEditMode(taskId: string | undefined) {
+    if (!taskId) return; 
+
+    if (this.isEditing(taskId)) {
+        // Si ya está editando, cancela y sale del modo de edición
+        this.editingTaskId = null;
+    } else {
+        // Entra en modo de edición
+        this.editingTaskId = taskId;
+    }
+  }
+
+  // Guarda la descripción actualizada de la tarea
+  saveDescription(task: Task) {
+    if (!task._id) {
+        this.toastService.showError('No se pudo guardar: ID de tarea inválido.', 'Error');
+        return;
     }
 
-    const newTask: Partial<Task> = {
-      title: this.newTaskTitle,
-      description: this.newTaskDescription,
-      completed: false
-    };
-
-    // ✅ LLAMADA A createTask CORREGIDA
-    this.taskService.createTask(newTask).subscribe({
-      next: (task: Task) => { // ✅ TIPADO
-        this.tasks.unshift(task); 
-        this.newTaskTitle = '';
-        this.newTaskDescription = '';
-        this.toastService.showSuccess('Tarea creada correctamente.', 'Creación Exitosa');
-      },
-      error: (error: any) => { // ✅ TIPADO
-        console.error('Error al crear tarea:', error);
-        this.toastService.showError('No se pudo crear la tarea. Inténtelo de nuevo.', 'Error');
-      }
+    // 🚨 Llamamos a updateTask que envía el objeto completo de la tarea
+    this.taskService.updateTask(task).subscribe({
+        next: (updatedTask: Task) => {
+            // Actualiza la tarea en el array local con la respuesta del servidor
+            const index = this.tasks.findIndex(t => t._id === updatedTask._id);
+            if (index > -1) {
+                this.tasks[index] = updatedTask;
+            }
+            this.editingTaskId = null; // Sale del modo de edición
+            this.toastService.showSuccess('Descripción guardada correctamente.', 'Éxito');
+        },
+        error: (error) => {
+            console.error('Error al guardar descripción:', error);
+            this.toastService.showError('Error al guardar la descripción.', 'Error de Edición');
+            this.loadTasks(); // Recarga para asegurar la consistencia si falla
+        }
     });
   }
 
-  toggleTaskCompletion(task: Task) {
-    // La lógica de actualización del estado de completado se traslada aquí
-    const updatedTask: Task = { 
-        ...task, 
-        completed: !task.completed,
-        // Agrega la fecha de completado si se completa
-        completedAt: !task.completed ? new Date().toISOString() : null
+  // 💥 MODIFICACIÓN: Usar createTask con título y descripción
+  addTask() { 
+    if (!this.newTaskTitle.trim()) { 
+      this.toastService.showError('El título no puede estar vacío.', 'Error de Entrada');
+      return; 
+    } 
+
+    const newTaskData: Partial<Task> = {
+        title: this.newTaskTitle.trim(),
+        description: this.newTaskDescription.trim() 
     };
 
-    // ✅ LLAMADA A updateTask CORREGIDA
+    this.taskService.createTask(newTaskData).subscribe({ 
+      next: (task) => { 
+        this.tasks.unshift(task); // Agrega la nueva tarea al principio de la lista
+        this.newTaskTitle = ''; 
+        this.newTaskDescription = ''; 
+        this.toastService.showSuccess('Tarea agregada correctamente.', 'Éxito');
+      }, 
+      error: (error) => { 
+        console.error('Error al agregar tarea:', error); 
+        this.toastService.showError('Error al agregar tarea.', 'Error');
+      } 
+    }); 
+  }
+
+  // 💥 MODIFICACIÓN: Usar updateTask con la tarea completa para el toggle
+  toggleTaskCompletion(task: Task) {
+    if (!task._id) return;
+
+    // Clonamos la tarea y cambiamos el estado
+    const updatedTask: Task = { ...task, completed: !task.completed };
+
     this.taskService.updateTask(updatedTask).subscribe({
-      next: (response: Task) => { // ✅ TIPADO
-        const index = this.tasks.findIndex(t => t._id === task._id);
-        if (index > -1) {
-          // Aseguramos que la tarea en la lista se actualice con la respuesta del servidor
-          this.tasks[index] = response; 
-          this.toastService.showSuccess(`Tarea marcada como ${response.completed ? 'completa' : 'pendiente'}.`, 'Actualización Exitosa');
+        next: (responseTask) => {
+            // Actualiza la tarea en la lista con la respuesta completa del servidor
+            const index = this.tasks.findIndex(t => t._id === task._id);
+            if (index !== -1) {
+                this.tasks[index] = responseTask;
+            }
+        },
+        error: (error) => {
+            console.error('Error al actualizar la tarea:', error);
+            this.toastService.showError('No se pudo actualizar la tarea.', 'Error de Actualización');
         }
-      },
-      error: (error: any) => { // ✅ TIPADO
-        console.error('Error al actualizar tarea:', error);
-        this.toastService.showError('No se pudo actualizar la tarea.', 'Error de Actualización');
-      }
     });
   }
 
@@ -134,7 +171,7 @@ export class HomePage implements OnInit {
                 this.tasks = this.tasks.filter(t => t._id !== task._id);
                 this.toastService.showSuccess('Tarea eliminada correctamente.', 'Eliminación Exitosa');
               },
-              error: (error: any) => { // ✅ TIPADO
+              error: (error) => {
                 console.error('Error al eliminar tarea:', error);
                 let errorMessage = 'No se pudo eliminar la tarea.';
                 if (error.status === 404 || error.status === 403) { 
@@ -154,6 +191,10 @@ export class HomePage implements OnInit {
   logout() { 
     this.authService.logout(); 
     this.toastService.showSuccess('Has cerrado sesión.', 'Adiós!');
-    this.router.navigateByUrl('/login'); 
+    this.router.navigateByUrl('/login', { replaceUrl: true });
+  }
+
+  goToAdmin() {
+    this.router.navigateByUrl('/admin');
   }
 }

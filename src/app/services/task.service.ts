@@ -1,17 +1,19 @@
 // File: task.service.ts
 import { Injectable } from '@angular/core'; 
-import { HttpClient } from '@angular/common/http'; 
+import { HttpClient, HttpParams } from '@angular/common/http'; // 👈 Importamos HttpParams
 import { Observable } from 'rxjs'; 
 import { environment } from '../../environments/environment'; 
 
-// 🚀 FIX: Ensure Task interface includes all necessary fields for dates and description
+// 🚀 MEJORA: Se añade el campo 'owner' para el panel de administrador
 export interface Task { 
   _id?: string; 
   title: string; 
   completed: boolean; 
-  description: string; // Add description field
-  createdAt?: string; // Mongoose timestamp
-  completedAt?: string | null; // New completion date field
+  description: string; 
+  createdAt?: string; 
+  completedAt?: string | null; 
+  // 💡 NUEVO CAMPO: Para mostrar el creador de la tarea en AdminPage
+  user?: { username: string; _id: string }; 
 } 
 
 @Injectable({ 
@@ -22,17 +24,23 @@ export class TaskService {
   
   constructor(private http: HttpClient) { } 
 
-  getTasks(): Observable<Task[]> { 
-    return this.http.get<Task[]>(this.apiUrl); 
+  /**
+   * Obtiene las tareas. Si 'allTasks' es true, solicita todas las tareas (requiere permisos de admin en el backend).
+   */
+  getTasks(allTasks: boolean = false): Observable<Task[]> { 
+    let params = new HttpParams();
+    if (allTasks) {
+      // Si es admin, enviamos un flag al backend.
+      params = params.set('all', 'true');
+    }
+    // Añadimos 'params' al request, si no hay 'allTasks', params está vacío y no afecta la request normal.
+    return this.http.get<Task[]>(this.apiUrl, { params }); 
   } 
 
-  // ✅ FIX/IMPROVEMENT: Renombrado de addTask a createTask para mayor claridad
-  // y acepta un objeto Partial<Task> para la creación.
   createTask(newTask: Partial<Task>): Observable<Task> { 
     return this.http.post<Task>(this.apiUrl, newTask); 
   }
 
-  // ✅ FIX: Se elimina toggleTask y se añade un updateTask más versátil.
   updateTask(task: Task): Observable<Task> { 
     return this.http.put<Task>(`${this.apiUrl}/${task._id}`, task); 
   } 

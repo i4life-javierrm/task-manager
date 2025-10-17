@@ -7,73 +7,136 @@
       Panel de Administrador 
       <ion-icon name="hammer-outline"></ion-icon>
     </ion-title>
+    <ion-buttons slot="end">
+        <ion-button (click)="currentView === 'users' ? loadUsers() : loadAllTasks()" fill="clear" color="primary">
+            <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
+        </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-segment [(ngModel)]="currentView" (ionChange)="switchView($event.detail.value)" color="warning">
+      <ion-segment-button value="users">
+        <ion-label>Usuarios</ion-label>
+        <ion-icon name="people-outline"></ion-icon>
+      </ion-segment-button>
+      <ion-segment-button value="tasks">
+        <ion-label>Tareas Globales</ion-label>
+        <ion-icon name="list-outline"></ion-icon>
+      </ion-segment-button>
+    </ion-segment>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true" class="ion-padding">
 
-  <ion-card class="ion-margin-top ion-text-center" color="light">
-    <ion-card-header>
-      <ion-card-title>Gestión de Usuarios</ion-card-title>
-      <ion-card-subtitle>Lista de todas las cuentas registradas en el sistema.</ion-card-subtitle>
-    </ion-card-header>
-  </ion-card>
+  @if (currentView === 'users') {
+    <ion-card class="ion-margin-top ion-text-center" color="light">
+      <ion-card-header>
+        <ion-card-title>Gestión de Usuarios</ion-card-title>
+        <ion-card-subtitle>Lista de todas las cuentas registradas en el sistema.</ion-card-subtitle>
+      </ion-card-header>
+    </ion-card>
 
-  <ion-list [inset]="true" class="ion-margin-top">
-    <ion-list-header>
-      <!-- FIX 1: Se elimina '()' para acceder a la longitud de la propiedad 'users' (array) -->
-      <ion-label>Cuentas ({{ users.length }})</ion-label>
-      <ion-button (click)="loadUsers()" fill="clear" color="primary">
-          <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
-      </ion-button>
-    </ion-list-header>
+    <ion-list [inset]="true" class="ion-margin-top">
+      <ion-list-header>
+        <ion-label>Cuentas ({{ users.length }})</ion-label>
+      </ion-list-header>
+      
+      @if (isLoading) {
+        <ion-item lines="none">
+          <ion-spinner name="crescent" slot="start"></ion-spinner>
+          <ion-label class="ion-padding-start">Cargando usuarios...</ion-label>
+        </ion-item>
+      } @else if (users.length === 0) {
+        <ion-item lines="none">
+          <ion-label class="ion-text-center ion-padding">
+            <p>😢 No se encontraron usuarios en la base de datos.</p>
+          </ion-label>
+        </ion-item>
+      }
+
+      @for (user of users; track user._id) {
+        <ion-item>
+          <ion-icon slot="start" [name]="user.isAdmin ? 'shield-checkmark-outline' : 'person-outline'" [color]="user.isAdmin ? 'danger' : 'medium'"></ion-icon>
+
+          <ion-label class="ion-text-wrap">
+            <h2>{{ user.username }}</h2>
+            <p>ID: {{ user._id }}</p>
+            <p>Registrado: {{ user.createdAt | date: 'shortDate' }}</p>
+          </ion-label>
+          
+          <ion-chip slot="end" [color]="user.isAdmin ? 'danger' : 'success'">
+              {{ user.isAdmin ? 'ADMIN' : 'USER' }}
+          </ion-chip>
+          
+          @if (!user.isAdmin) {
+              <ion-button slot="end" fill="clear" color="danger" (click)="deleteUser(user._id!)">
+                  <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+              </ion-button>
+          } @else {
+              <ion-button slot="end" fill="clear" color="medium" [disabled]="true">
+                  <ion-icon slot="icon-only" name="lock-closed-outline"></ion-icon>
+              </ion-button>
+          }
+        </ion-item>
+      }
+    </ion-list>
     
-    <!-- FIX 2: Se elimina '()' para acceder a la propiedad booleana 'isLoading' -->
-    @if (isLoading) {
-      <ion-item lines="none">
-        <ion-spinner name="crescent" slot="start"></ion-spinner>
-        <ion-label class="ion-padding-start">Cargando usuarios...</ion-label>
-      </ion-item>
-    } @else if (users.length === 0) {
-      <ion-item lines="none">
-        <ion-label class="ion-text-center ion-padding">
-          <p>😢 No se encontraron usuarios en la base de datos.</p>
-        </ion-label>
-      </ion-item>
-    }
+    <p class="ion-text-center ion-margin-top ion-padding-bottom">
+      <small class="ion-color-medium">El administrador no puede ser eliminado desde este panel.</small>
+    </p>
+  }
 
-    <!-- FIX 3: Se elimina '()' para iterar sobre la propiedad 'users' (array) -->
-    @for (user of users; track user._id) {
-      <ion-item>
-        <ion-icon slot="start" [name]="user.isAdmin ? 'shield-checkmark-outline' : 'person-outline'" [color]="user.isAdmin ? 'danger' : 'medium'"></ion-icon>
+  @if (currentView === 'tasks') {
+    <ion-card class="ion-margin-top ion-text-center" color="light">
+      <ion-card-header>
+        <ion-card-title>Tareas Globales</ion-card-title>
+        <ion-card-subtitle>Todas las tareas creadas por todos los usuarios.</ion-card-subtitle>
+      </ion-card-header>
+    </ion-card>
 
-        <ion-label class="ion-text-wrap">
-          <h2>{{ user.username }}</h2>
-          <p>ID: {{ user._id }}</p>
-          <p>Registrado: {{ user.createdAt | date: 'shortDate' }}</p>
-        </ion-label>
-        
-        <ion-chip slot="end" [color]="user.isAdmin ? 'danger' : 'success'">
-            {{ user.isAdmin ? 'ADMIN' : 'USER' }}
-        </ion-chip>
-        
-        <!-- Línea 50: Llamada al método deleteUser con el ID como string -->
-        @if (!user.isAdmin) {
-            <ion-button slot="end" fill="clear" color="danger" (click)="deleteUser(user._id)">
-                <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
-            </ion-button>
-        } @else {
-             <!-- No se permite eliminar la cuenta de administrador -->
-            <ion-button slot="end" fill="clear" color="medium" [disabled]="true">
-                <ion-icon slot="icon-only" name="lock-closed-outline"></ion-icon>
-            </ion-button>
-        }
-      </ion-item>
-    }
-  </ion-list>
-  
-  <p class="ion-text-center ion-margin-top ion-padding-bottom">
-    <small class="ion-color-medium">El administrador no puede ser eliminado desde este panel.</small>
-  </p>
+    <ion-list [inset]="true" class="ion-margin-top">
+      <ion-list-header>
+        <ion-label>Tareas ({{ allTasks.length }})</ion-label>
+      </ion-list-header>
+      
+      @if (isTasksLoading) {
+        <ion-item lines="none">
+          <ion-spinner name="crescent" slot="start"></ion-spinner>
+          <ion-label class="ion-padding-start">Cargando tareas globales...</ion-label>
+        </ion-item>
+      } @else if (allTasks.length === 0) {
+        <ion-item lines="none">
+          <ion-label class="ion-text-center ion-padding">
+            <p>✨ No se encontraron tareas en el sistema.</p>
+          </ion-label>
+        </ion-item>
+      }
 
+      @for (task of allTasks; track task._id) {
+        <ion-item [class.completed]="task.completed">
+          <ion-icon slot="start" 
+                    [name]="task.completed ? 'checkmark-circle-outline' : 'time-outline'" 
+                    [color]="task.completed ? 'success' : 'warning'">
+          </ion-icon>
+
+          <ion-label class="ion-text-wrap">
+            <h2>{{ task.title }}</h2>
+            <p>Usuario: <strong>{{ task.user?.username || 'Desconocido' }}</strong></p>
+            <p>Creada: {{ task.createdAt | date: 'short' }}</p>
+            <p>Estado: 
+                <ion-text [color]="task.completed ? 'success' : 'danger'">
+                    {{ task.completed ? 'Completa' : 'Pendiente' }}
+                </ion-text>
+            </p>
+            <p class="description-text">{{ task.description }}</p>
+          </ion-label>
+          
+          <ion-button slot="end" fill="clear" color="danger" (click)="deleteAdminTask(task)">
+              <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+          </ion-button>
+        </ion-item>
+      }
+    </ion-list>
+  }
 </ion-content>

@@ -23,9 +23,14 @@ export class HomePage implements OnInit {
   tasks: Task[] = []; 
   newTaskTitle: string = ''; 
   newTaskDescription: string = '';
+  newTaskTagsInput: string = ''; 
   isAdminUser: boolean = false; 
 
-  // 🚀 NUEVA PROPIEDAD: ID de la tarea que se está editando
+  // 💥 ELIMINADO: filterTagInput (reemplazado por selectedTags)
+  
+  // 🚀 NUEVA PROPIEDAD: Los tags seleccionados para filtrar
+  selectedTags: string[] = []; 
+
   editingTaskId: string | null = null; 
 
   private taskService = inject(TaskService);
@@ -53,12 +58,75 @@ export class HomePage implements OnInit {
     }); 
   }
 
-  // 🚀 CÁLCULO DE TAREAS PENDIENTES
-  get pendingTasks(): Task[] {
-    return this.tasks.filter(t => !t.completed);
+  // 🚀 NUEVA PROPIEDAD CALCULADA: Genera una lista de todos los tags únicos
+  get availableTags(): string[] {
+    const nestedTags: string[][] = this.tasks
+      .map(task => task.tags || []); // Obtiene arrays de tags (string[][])
+  
+    // Solución TS2550: Usa reduce en lugar de flat() para aplanar el array.
+    // Solución TS7006/TS2322: Añade tipado explícito a las funciones.
+    const allTags: string[] = nestedTags
+      .reduce((acc: string[], val: string[]) => acc.concat(val), [])
+      // Solución TS7006: Tipado explícito para 'tag'
+      .filter((tag: string) => tag && tag.trim().length > 0); 
+  
+    // Usa un Set para obtener solo los valores únicos y luego los ordena.
+    // El tipado previo garantiza que el resultado sea string[]
+    return [...new Set(allTags)].sort(); 
   }
 
-  // 🚀 NUEVOS MÉTODOS DE EDICIÓN DE DESCRIPCIÓN
+  // 🚀 PROPIEDAD CALCULADA: Tareas filtradas (LÓGICA DE FILTRADO MÚLTIPLE)
+  get filteredTasks(): Task[] {
+    // Si no hay tags seleccionados, devuelve todas las tareas
+    if (this.selectedTags.length === 0) {
+      return this.tasks;
+    }
+
+    // Filtra las tareas cuya lista de tags incluya TODOS los selectedTags (AND logic)
+    return this.tasks.filter(task => {
+      // Si la tarea no tiene tags, no puede contener los seleccionados
+      if (!task.tags || task.tags.length === 0) {
+        return false;
+      }
+      
+      // Comprobamos si TODOS los selectedTags están presentes en task.tags
+      // 💥 CAMBIO CLAVE: Usamos .some() en lugar de .every() para la lógica OR.
+      return this.selectedTags.some(selectedTag => 
+        task.tags.some(taskTag => taskTag.toLowerCase() === selectedTag.toLowerCase())
+      );
+    });
+  }
+
+  // 🚀 PROPIEDAD CALCULADA: Tareas pendientes (basada en filteredTasks)
+  get pendingTasks(): Task[] {
+    return this.filteredTasks.filter(t => !t.completed);
+  }
+
+  // 🚀 NUEVO MÉTODO: Alterna la selección de un tag
+  toggleTagFilter(tag: string) {
+    const index = this.selectedTags.indexOf(tag);
+    if (index > -1) {
+      // El tag ya está seleccionado, lo quitamos
+      this.selectedTags.splice(index, 1);
+    } else {
+      // El tag no está seleccionado, lo añadimos
+      this.selectedTags.push(tag);
+    }
+  }
+
+  // 🚀 NUEVO MÉTODO: Comprueba si un tag está seleccionado
+  isTagSelected(tag: string): boolean {
+    return this.selectedTags.includes(tag);
+  }
+
+  // 🚀 NUEVO MÉTODO: Limpia el filtro
+  clearTagFilter() {
+    this.selectedTags = [];
+  }
+
+  // --------------------------------------------------------------------------------
+  // El resto de métodos se mantienen igual...
+  // --------------------------------------------------------------------------------
 
   // Verifica si la tarea actual está siendo editada
   isEditing(taskId: string | undefined): boolean {
@@ -70,10 +138,8 @@ export class HomePage implements OnInit {
     if (!taskId) return; 
 
     if (this.isEditing(taskId)) {
-        // Si ya está editando, cancela y sale del modo de edición
         this.editingTaskId = null;
     } else {
-        // Entra en modo de edición
         this.editingTaskId = taskId;
     }
   }
@@ -85,42 +151,46 @@ export class HomePage implements OnInit {
         return;
     }
 
-    // 🚨 Llamamos a updateTask que envía el objeto completo de la tarea
     this.taskService.updateTask(task).subscribe({
         next: (updatedTask: Task) => {
-            // Actualiza la tarea en el array local con la respuesta del servidor
             const index = this.tasks.findIndex(t => t._id === updatedTask._id);
             if (index > -1) {
                 this.tasks[index] = updatedTask;
             }
-            this.editingTaskId = null; // Sale del modo de edición
+            this.editingTaskId = null; 
             this.toastService.showSuccess('Descripción guardada correctamente.', 'Éxito');
         },
         error: (error) => {
             console.error('Error al guardar descripción:', error);
             this.toastService.showError('Error al guardar la descripción.', 'Error de Edición');
-            this.loadTasks(); // Recarga para asegurar la consistencia si falla
+            this.loadTasks(); 
         }
     });
   }
 
-  // 💥 MODIFICACIÓN: Usar createTask con título y descripción
   addTask() { 
     if (!this.newTaskTitle.trim()) { 
       this.toastService.showError('El título no puede estar vacío.', 'Error de Entrada');
       return; 
     } 
 
+    const tagsArray = this.newTaskTagsInput 
+      ? this.newTaskTagsInput.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
+      : [];
+      
     const newTaskData: Partial<Task> = {
         title: this.newTaskTitle.trim(),
-        description: this.newTaskDescription.trim() 
+        description: this.newTaskDescription.trim(),
+        tags: tagsArray 
     };
 
     this.taskService.createTask(newTaskData).subscribe({ 
       next: (task) => { 
-        this.tasks.unshift(task); // Agrega la nueva tarea al principio de la lista
+        // 💡 Importante: Se añade a 'tasks' para que el filtro y 'availableTags' se actualicen
+        this.tasks.unshift(task); 
         this.newTaskTitle = ''; 
         this.newTaskDescription = ''; 
+        this.newTaskTagsInput = ''; 
         this.toastService.showSuccess('Tarea agregada correctamente.', 'Éxito');
       }, 
       error: (error) => { 
@@ -130,16 +200,13 @@ export class HomePage implements OnInit {
     }); 
   }
 
-  // 💥 MODIFICACIÓN: Usar updateTask con la tarea completa para el toggle
   toggleTaskCompletion(task: Task) {
     if (!task._id) return;
 
-    // Clonamos la tarea y cambiamos el estado
     const updatedTask: Task = { ...task, completed: !task.completed };
 
     this.taskService.updateTask(updatedTask).subscribe({
         next: (responseTask) => {
-            // Actualiza la tarea en la lista con la respuesta completa del servidor
             const index = this.tasks.findIndex(t => t._id === task._id);
             if (index !== -1) {
                 this.tasks[index] = responseTask;

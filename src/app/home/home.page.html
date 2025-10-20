@@ -30,22 +30,59 @@
           <ion-textarea label="Descripción (Opcional)" labelPlacement="stacked" autoGrow="true" [(ngModel)]="newTaskDescription" placeholder="Detalles de la tarea..."></ion-textarea>
         </ion-item>
 
+        <ion-item>
+          <ion-input 
+            label="Etiquetas (Separadas por coma)" 
+            labelPlacement="stacked" 
+            [(ngModel)]="newTaskTagsInput" 
+            placeholder="Ej: urgente, proyecto, front-end"
+          ></ion-input>
+        </ion-item>
+        
         <ion-button expand="block" class="ion-margin-top" (click)="addTask()" [disabled]="!newTaskTitle.trim()">
           <ion-icon name="add-circle-outline" slot="start"></ion-icon>
           Añadir Tarea
         </ion-button>
       </ion-card-content>
     </ion-card>
-
-    <ion-list [inset]="true" *ngIf="tasks.length > 0; else noTasks">
+    
+    <div class="filter-container ion-margin-bottom" *ngIf="availableTags.length > 0">
+        <div class="filter-header">Filtrar por Etiquetas ({{ selectedTags.length }} seleccionadas)</div>
+        <div class="tags-filter-bar">
+            <ion-chip 
+                *ngFor="let tag of availableTags"
+                class="tag-filter-chip"
+                [color]="isTagSelected(tag) ? 'primary' : 'medium'"
+                [outline]="!isTagSelected(tag)"
+                (click)="toggleTagFilter(tag)"
+            >
+                <ion-label>{{ tag }}</ion-label>
+                <ion-icon 
+                    *ngIf="isTagSelected(tag)" 
+                    name="close-circle"
+                ></ion-icon>
+            </ion-chip>
+            
+            <ion-chip 
+                *ngIf="selectedTags.length > 0" 
+                color="danger" 
+                class="tag-filter-chip"
+                (click)="clearTagFilter()"
+            >
+                <ion-label>Limpiar Filtros</ion-label>
+                <ion-icon name="funnel-outline"></ion-icon>
+            </ion-chip>
+        </div>
+    </div>
+    <ion-list [inset]="true" *ngIf="filteredTasks.length > 0; else noTasks">
       <ion-list-header>
-        <ion-label>Tareas Pendientes ({{ pendingTasks.length }})</ion-label>
+        <ion-label>Tareas Pendientes ({{ pendingTasks.length }})</ion-label> 
         <ion-button (click)="loadTasks()" fill="clear" color="primary">
           <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
         </ion-button>
       </ion-list-header>
 
-      @for (task of tasks; track task._id) {
+      @for (task of filteredTasks; track task._id) {
         <ion-item [class.completed]="task.completed">
 
           <ion-checkbox slot="start" [checked]="task.completed" (ionChange)="toggleTaskCompletion(task)">
@@ -57,6 +94,12 @@
             <p class="date-text">
               Creada: {{ task.createdAt | date: 'shortDate' }}
             </p>
+
+            <div class="task-tags" *ngIf="task.tags && task.tags.length > 0">
+              <ion-chip *ngFor="let tag of task.tags || []" size="small" color="secondary">
+                <ion-label>{{ tag }}</ion-label>
+              </ion-chip>
+            </div>
             
             <p [class.completed-date]="task.completed" [class.pending-status]="!task.completed">
               Completada: 
@@ -115,10 +158,11 @@
     <ng-template #noTasks>
       <ion-card class="ion-margin-top ion-text-center">
         <ion-card-content>
-          <p>No tienes tareas pendientes. ¡Añade una ahora!</p>
+          <p *ngIf="selectedTags.length > 0">No hay tareas que contengan **TODAS** las etiquetas seleccionadas.</p>
+          <p *ngIf="selectedTags.length === 0">No tienes tareas pendientes. ¡Añade una ahora!</p>
         </ion-card-content>
       </ion-card>
     </ng-template>
     
   </div> 
-  </ion-content>
+</ion-content>

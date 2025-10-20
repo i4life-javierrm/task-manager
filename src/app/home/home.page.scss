@@ -23,6 +23,65 @@ ion-item.completed {
   }
 }
 
+// 🚀 ESTILOS EXISTENTES: Contenedor y Chips de Tags en la lista
+.task-tags {
+    margin-top: 4px;
+    margin-bottom: 4px;
+    display: flex; // Muestra los chips en línea
+    flex-wrap: wrap; // Permite que se envuelvan si hay muchos
+    // Alineación al inicio del contenedor
+    align-items: flex-start; 
+
+    ion-chip {
+        // Estilos para hacer el chip compacto (tomados de admin.page.scss)
+        height: 20px; 
+        font-size: 0.65rem;
+        margin-right: 4px; // Espacio entre chips
+        margin-bottom: 2px; // Pequeño margen inferior para envolver
+        padding: 0 6px; // Reducir el padding interno
+    }
+}
+
+// ------------------------------------
+// 🚀 NUEVOS ESTILOS: Filtro de Chips Seleccionables
+// ------------------------------------
+.filter-container {
+  padding: 0 0 10px 0; // Ajuste de padding para la barra de filtro
+}
+
+.filter-header {
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin: 0 0 4px 0;
+  padding: 0 16px; // Mantiene el padding horizontal del wrapper
+}
+
+.tags-filter-bar {
+  display: flex;
+  flex-wrap: wrap; 
+  gap: 6px; 
+  padding: 0 16px; // Mantiene el padding horizontal del wrapper
+
+  .tag-filter-chip {
+      cursor: pointer;
+      font-size: 0.75rem;
+      height: 28px;
+      transition: transform 0.1s, background-color 0.1s;
+
+      &:active {
+          transform: scale(0.98);
+      }
+      
+      // Estilo para los chips NO seleccionados (outline)
+      &[outline] {
+          color: var(--ion-color-medium-shade);
+          border: 1px solid var(--ion-color-medium-tint);
+          --background: transparent;
+      }
+  }
+}
+
+
 // Estilo para el contenedor de la descripción
 .description-container {
   margin-top: 4px;

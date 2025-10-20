@@ -81,7 +81,7 @@ export class AdminPage implements OnInit {
   async deleteUser(userId: string) {
     const userToDelete = this.users.find(u => u._id === userId);
 
-    if (userToDelete && userToDelete.isAdmin) {
+    if (userToDelete && userToDelete.role === 'ADMIN') {
         this.toastService.showError('No puedes eliminar una cuenta de administrador.', 'Advertencia');
         return;
     }

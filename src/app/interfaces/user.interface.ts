@@ -3,7 +3,7 @@ export interface User {
     _id: string;
     username: string;
     // La propiedad 'isAdmin' es usada en el backend (user.model.js) y el template (admin.page_v2.html)
-    isAdmin: boolean; 
+    role: string;
     // Mongoose timestamps
     createdAt: string; 
     updatedAt: string;

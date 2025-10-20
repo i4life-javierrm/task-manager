@@ -11,7 +11,7 @@ import { Router } from '@angular/router';
 export class AuthService { 
   private apiUrl = environment.apiUrl; 
   private TOKEN_KEY = 'auth_token';
-  private ADMIN_KEY = 'is_admin'; 
+  private ROLE_KEY = 'user_role'; 
   private authState = new BehaviorSubject<boolean>(this.hasToken()); 
  
   constructor(private http: HttpClient, private router: Router) {} 
@@ -22,7 +22,7 @@ export class AuthService {
 
   // 💥 FIX: Propiedad GET (sin paréntesis) - Usado en AdminPage y HomePage
   get isAdmin(): boolean {
-    return localStorage.getItem(this.ADMIN_KEY) === 'true';
+    return localStorage.getItem(this.ROLE_KEY) === 'ADMIN';
   }
 
   // 💥 FIX: Nuevo método para obtener el token - Usado en auth-guard
@@ -35,11 +35,11 @@ export class AuthService {
     username, password }); 
   } 
   
-  login(username: string, password: string): Observable<{ token: string, isAdmin: boolean }> { 
-    return this.http.post<{ token: string, isAdmin: boolean }>(`${this.apiUrl}/login`, { username, password }).pipe( 
+  login(username: string, password: string): Observable<{ token: string, role: 'USER' | 'ADMIN' }> { 
+    return this.http.post<{ token: string, role: 'USER' | 'ADMIN' }>(`${this.apiUrl}/login`, { username, password }).pipe( 
       tap(response => { 
         localStorage.setItem(this.TOKEN_KEY, response.token);
-        localStorage.setItem(this.ADMIN_KEY, response.isAdmin ? 'true' : 'false'); 
+        localStorage.setItem(this.ROLE_KEY, response.role); 
         this.authState.next(true); 
       }) 
     ); 
@@ -47,7 +47,7 @@ export class AuthService {
   
   logout() { 
     localStorage.removeItem(this.TOKEN_KEY); 
-    localStorage.removeItem(this.ADMIN_KEY); 
+    localStorage.removeItem(this.ROLE_KEY); 
     this.authState.next(false); 
     this.router.navigateByUrl('/login');
   }

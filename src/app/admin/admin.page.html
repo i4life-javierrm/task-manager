@@ -47,8 +47,8 @@
       @for (user of users; track user._id) {
         <ion-item>
           <ion-icon slot="start" 
-            [name]="user.isAdmin ? 'shield-checkmark-outline' : 'person-outline'" 
-            [color]="user.isAdmin ? 'danger' : 'medium'">
+            [name]="user.role === 'ADMIN' ? 'shield-checkmark-outline' : 'person-outline'" 
+            [color]="user.role === 'ADMIN' ? 'danger' : 'medium'">
           </ion-icon>
 
           <ion-label class="ion-text-wrap">
@@ -57,11 +57,11 @@
             <p>Registrado: {{ user.createdAt | date: 'shortDate' }}</p>
           </ion-label>
           
-          <ion-chip slot="end" [color]="user.isAdmin ? 'danger' : 'success'">
-              {{ user.isAdmin ? 'ADMIN' : 'USER' }}
+          <ion-chip slot="end" [color]="user.role === 'ADMIN' ? 'danger' : 'success'">
+              {{ user.role === 'ADMIN' ? 'ADMIN' : 'USER' }}
           </ion-chip>
           
-          @if (!user.isAdmin) {
+          @if (user.role !== 'ADMIN') {
               <ion-button slot="end" fill="clear" color="danger" (click)="deleteUser(user._id!)">
                   <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
               </ion-button>

@@ -35,7 +35,8 @@ export class CreateTaskModalComponent implements OnInit {
       title: ['', [Validators.required, Validators.minLength(3)]],
       description: [''],
       // 💡 Aseguramos que se seleccione un usuario, usando el ID del primer usuario como valor por defecto.
-      assignedUserId: [this.users[0]?._id || '', [Validators.required]] 
+      assignedUserId: [this.users[0]?._id || '', [Validators.required]] ,
+      tagsInput: [''],
     });
   }
 
@@ -57,11 +58,16 @@ export class CreateTaskModalComponent implements OnInit {
     }
 
     this.isSaving = true;
-    const { title, description, assignedUserId } = this.taskForm.value;
+    const { title, description, assignedUserId, tagsInput } = this.taskForm.value;
+
+    const tagsArray = tagsInput
+      ? tagsInput.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag.length > 0)
+      : [];
 
     const newTask: Partial<Task> = {
       title: title,
       description: description,
+      tags: tagsArray,
       completed: false // Por defecto, es false
     };
 

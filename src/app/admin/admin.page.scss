@@ -116,6 +116,65 @@ ion-item:not(.admin-task-item) {
   }
 }
 
+.admin-task-item {
+    
+  .task-tags {
+      margin-top: 4px;
+      margin-bottom: 4px;
+      display: flex; // Muestra los chips en línea
+      flex-wrap: wrap; // Permite que se envuelvan si hay muchos
+  }
+
+  ion-chip {
+      // Reducir el tamaño del chip para que sea más compacto
+      height: 20px; 
+      font-size: 0.65rem;
+      margin-right: 4px; // Espacio entre chips
+      margin-bottom: 2px; // Pequeño margen inferior para envolver
+      padding: 0 6px; // Reducir el padding interno
+  }
+}
+
+// ------------------------------------
+// ESTILOS DE FILTRO DE TAGS
+// ------------------------------------
+
+.filter-container {
+  padding-bottom: 0; // Ajuste de padding
+}
+
+.filter-header {
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin: 0 0 4px 0;
+}
+
+.tags-filter-bar {
+  display: flex;
+  flex-wrap: wrap; // Permite que los chips se envuelvan
+  gap: 6px; // Espacio entre chips
+  margin-bottom: 10px;
+
+  .tag-filter-chip {
+      // Estilo general para chips de filtro
+      cursor: pointer;
+      font-size: 0.75rem;
+      height: 28px;
+      transition: transform 0.1s;
+
+      &:active {
+          transform: scale(0.95);
+      }
+  }
+
+  .clear-filter-chip {
+      cursor: pointer;
+      font-size: 0.7rem;
+      height: 28px;
+      --background: var(--ion-color-danger-shade);
+  }
+}
+
 // ------------------------------------
 // ANIMACIONES
 // ------------------------------------

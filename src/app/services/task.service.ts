@@ -14,6 +14,7 @@ export interface Task {
   completedAt?: string | null; 
   // 💡 NUEVO CAMPO: Para mostrar el creador de la tarea en AdminPage
   user?: { username: string; _id: string }; 
+  tags: string[];
 } 
 
 @Injectable({ 

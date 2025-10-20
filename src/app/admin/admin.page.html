@@ -33,34 +33,25 @@
   <div *ngIf="currentView === 'users'">
     <ion-list [inset]="true">
       <ion-list-header>
-        <ion-label>Cuentas Registradas</ion-label>
-        <ion-button (click)="loadUsers()" fill="clear" color="primary" [disabled]="isLoading">
-          <ion-icon slot="icon-only" [name]="isLoading ? 'sync-outline' : 'refresh-outline'" [class.spin]="isLoading"></ion-icon>
-        </ion-button>
+        <ion-label>Lista de Usuarios ({{ users.length }})</ion-label>
       </ion-list-header>
-
-      <ion-item *ngIf="isLoading">
-        <ion-spinner name="crescent" slot="start"></ion-spinner>
-        <ion-label>Cargando usuarios...</ion-label>
-      </ion-item>
       
       @for (user of users; track user._id) {
         <ion-item>
           <ion-icon slot="start" 
-            [name]="user.role === 'ADMIN' ? 'shield-checkmark-outline' : 'person-outline'" 
-            [color]="user.role === 'ADMIN' ? 'danger' : 'medium'">
+              [name]="user.role === 'ADMIN' ? 'shield-checkmark-outline' : 'person-outline'" 
+              [color]="user.role === 'ADMIN' ? 'danger' : 'medium'">
           </ion-icon>
 
           <ion-label class="ion-text-wrap">
-            <h2>{{ user.username }}</h2>
-            <p>ID: {{ user._id }}</p>
-            <p>Registrado: {{ user.createdAt | date: 'shortDate' }}</p>
+              <p>ID: {{ user._id }}</p>
+              <h2>{{ user.username }}</h2>
           </ion-label>
-          
+
           <ion-chip slot="end" [color]="user.role === 'ADMIN' ? 'danger' : 'success'">
-              {{ user.role === 'ADMIN' ? 'ADMIN' : 'USER' }}
+              {{ user.role }}
           </ion-chip>
-          
+
           @if (user.role !== 'ADMIN') {
               <ion-button slot="end" fill="clear" color="danger" (click)="deleteUser(user._id!)">
                   <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
@@ -72,57 +63,99 @@
           }
         </ion-item>
       }
-    </ion-list>
-  </div>
-
-  <div *ngIf="currentView === 'tasks'">
-    <ion-list [inset]="true">
-      <ion-list-header>
-        <ion-label>Tareas del Sistema</ion-label>
-        <ion-button (click)="createTaskForUser()" fill="solid" color="success" size="small" [disabled]="users.length === 0">
-            <ion-icon slot="start" name="add-circle-outline"></ion-icon>
-            <ion-label>Nueva</ion-label>
-        </ion-button>
-        <ion-button (click)="loadAllTasks()" fill="clear" color="primary" [disabled]="isTasksLoading">
-          <ion-icon slot="icon-only" [name]="isTasksLoading ? 'sync-outline' : 'refresh-outline'" [class.spin]="isTasksLoading"></ion-icon>
-        </ion-button>
-      </ion-list-header>
-
-      <ion-item *ngIf="isTasksLoading">
-        <ion-spinner name="crescent" slot="start"></ion-spinner>
-        <ion-label>Cargando tareas globales...</ion-label>
-      </ion-item>
-
-      @for (task of allTasks; track task._id) {
-        <ion-item class="admin-task-item" [class.completed]="task.completed">
-          <ion-icon slot="start" 
-            [name]="task.completed ? 'checkmark-circle-outline' : 'time-outline'" 
-            [color]="task.completed ? 'success' : 'primary'">
-          </ion-icon>
-
-          <ion-label class="ion-text-wrap">
-            <h2>{{ task.title }}</h2>
-            <p class="task-owner">
-              Dueño: 
-              <span class="username-text">
-                {{ task.user?.username || 'Usuario Eliminado' }}
-              </span>
-            </p>
-            <p class="task-description">{{ task.description || 'Sin descripción' }}</p>
-          </ion-label>
-
-          <ion-button slot="end" fill="clear" color="danger" (click)="deleteAdminTask(task)">
-            <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
-          </ion-button>
-        </ion-item>
-      }
       
-      @if (allTasks.length === 0 && !isTasksLoading) {
+      @if (users.length === 0) {
         <ion-item>
-          <ion-label class="ion-text-center">No hay tareas registradas en el sistema.</ion-label>
+          <ion-label color="medium">No hay usuarios registrados.</ion-label>
         </ion-item>
       }
     </ion-list>
   </div>
 
+  <div *ngIf="currentView === 'tasks'" class="ion-padding-top filter-container">
+    
+    <ion-label *ngIf="availableTags.length === 0" color="medium" class="ion-padding">
+      No hay etiquetas disponibles en las tareas.
+    </ion-label>
+
+    <div *ngIf="availableTags.length > 0">
+      <ion-text color="medium">
+        <h4 class="filter-header">Filtrar por Etiquetas:</h4>
+      </ion-text>
+      <div class="tags-filter-bar">
+        <ion-chip 
+          *ngFor="let tag of availableTags" 
+          (click)="toggleTagFilter(tag)"
+          size="small"
+          [color]="selectedTags.includes(tag) ? 'primary' : 'medium'"
+          [outline]="!selectedTags.includes(tag)"
+          class="tag-filter-chip"
+        >
+          <ion-label>{{ tag }}</ion-label>
+        </ion-chip>
+        
+        <ion-chip 
+          *ngIf="selectedTags.length > 0"
+          (click)="selectedTags = []; filterTasks()"
+          color="danger"
+          size="small"
+          class="clear-filter-chip"
+        >
+          <ion-label>Limpiar Filtros</ion-label>
+        </ion-chip>
+      </div>
+    </div>
+  </div>
+  <ion-list [inset]="true" *ngIf="currentView === 'tasks'">
+    <ion-list-header>
+      <ion-label>Tareas Globales ({{ allTasks.length }})</ion-label>
+      <ion-button (click)="createTaskForUser()" fill="clear" color="success">
+        <ion-icon name="add-circle-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+      <ion-button (click)="loadAllTasks()" fill="clear" [disabled]="isTasksLoading">
+        <ion-icon name="refresh-outline" slot="icon-only" [class.spin]="isTasksLoading"></ion-icon>
+      </ion-button>
+    </ion-list-header>
+
+    <ion-item *ngIf="isTasksLoading">
+      <ion-spinner name="crescent" slot="start"></ion-spinner>
+      <ion-label>Cargando tareas globales...</ion-label>
+    </ion-item>
+
+    @for (task of allTasks; track task._id) {
+      <ion-item class="admin-task-item" [class.completed]="task.completed">
+        <ion-icon slot="start" 
+          [name]="task.completed ? 'checkmark-circle-outline' : 'time-outline'" 
+          [color]="task.completed ? 'success' : 'primary'">
+        </ion-icon>
+
+        <ion-label class="ion-text-wrap">
+          <h2>{{ task.title }}</h2>
+
+          <div class="task-tags">
+            <ion-chip *ngFor="let tag of task.tags" size="small" color="secondary">
+              <ion-label>{{ tag }}</ion-label>
+            </ion-chip>
+          </div>
+          <p class="task-owner">
+            Dueño: 
+            <span class="username-text">
+              {{ task.user?.username || 'Usuario Eliminado' }}
+            </span>
+          </p>
+          <p class="task-description">{{ task.description || 'Sin descripción' }}</p>
+        </ion-label>
+
+        <ion-button slot="end" fill="clear" color="danger" (click)="deleteAdminTask(task)">
+          <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+        </ion-button>
+      </ion-item>
+    }
+    
+    @if (allTasks.length === 0 && !isTasksLoading) {
+      <ion-item>
+        <ion-label color="medium">No se encontraron tareas globales (¡o los filtros no arrojaron resultados!).</ion-label>
+      </ion-item>
+    }
+  </ion-list>
 </ion-content>

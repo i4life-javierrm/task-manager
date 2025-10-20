@@ -44,4 +44,15 @@ export class ToastService {
       timeOut: 4000
     });
   }
+
+  /**
+   * Displays an information toast.
+   * @param message The main content of the toast.
+   * @param title The title of the toast (e.g., 'Información').
+   */
+  showInfo(message: string, title: string = 'Información') {
+    this.toastr.info(message, title, {
+      timeOut: 3000
+    });
+  }
 }

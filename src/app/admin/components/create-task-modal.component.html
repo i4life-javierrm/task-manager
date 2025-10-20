@@ -1,0 +1,93 @@
+<ion-header>
+    <ion-toolbar color="success">
+      <ion-buttons slot="start">
+        <ion-button (click)="cancel()">
+          <ion-icon name="close-outline"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+      <ion-title>Asignar Nueva Tarea</ion-title>
+      <ion-buttons slot="end">
+        <ion-button (click)="createTask()" [disabled]="taskForm.invalid || isSaving">
+          <ion-icon name="save-outline" slot="icon-only"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+    </ion-toolbar>
+  </ion-header>
+  
+  <ion-content class="ion-padding">
+    
+    <form [formGroup]="taskForm" (ngSubmit)="createTask()">
+      
+      <ion-list [inset]="true">
+        <ion-list-header>
+          <ion-label>Detalles de la Tarea</ion-label>
+        </ion-list-header>
+  
+        <ion-item>
+          <ion-input 
+            label="Título" 
+            labelPlacement="stacked" 
+            formControlName="title" 
+            placeholder="Título corto y descriptivo"
+            required
+          ></ion-input>
+        </ion-item>
+        <div class="error-message" *ngIf="taskForm.controls['title'].invalid && taskForm.controls['title'].touched">
+          <ion-note color="danger" *ngIf="taskForm.controls['title'].errors?.['required']">
+            El título es obligatorio.
+          </ion-note>
+          <ion-note color="danger" *ngIf="taskForm.controls['title'].errors?.['minlength']">
+            Debe tener al menos 3 caracteres.
+          </ion-note>
+        </div>
+  
+        <ion-item>
+          <ion-textarea 
+            label="Descripción (Opcional)" 
+            labelPlacement="stacked" 
+            formControlName="description" 
+            placeholder="Detalles y requisitos"
+            rows="3"
+          ></ion-textarea>
+        </ion-item>
+      </ion-list>
+  
+      <ion-list [inset]="true" class="ion-margin-top">
+        <ion-list-header>
+          <ion-label>Usuario Asignado</ion-label>
+        </ion-list-header>
+        
+        <ion-item>
+          <ion-select 
+            label="Seleccionar Usuario" 
+            labelPlacement="stacked" 
+            formControlName="assignedUserId" 
+            placeholder="Selecciona un usuario"
+            required
+          >
+            <ion-select-option *ngFor="let user of users" [value]="user._id">
+              {{ user.username }}
+            </ion-select-option>
+          </ion-select>
+        </ion-item>
+        <div class="error-message" *ngIf="taskForm.controls['assignedUserId'].invalid && taskForm.controls['assignedUserId'].touched">
+          <ion-note color="danger">
+            Debe seleccionar un usuario.
+          </ion-note>
+        </div>
+      </ion-list>
+      
+      <ion-button 
+        type="submit" 
+        expand="block" 
+        color="success" 
+        class="ion-margin-top"
+        [disabled]="taskForm.invalid || isSaving"
+      >
+        <ion-spinner *ngIf="isSaving" name="lines" slot="start"></ion-spinner>
+        {{ isSaving ? 'Creando...' : 'Crear y Asignar Tarea' }}
+      </ion-button>
+  
+    </form>
+  
+  </ion-content>

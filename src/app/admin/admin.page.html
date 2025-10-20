@@ -79,6 +79,10 @@
     <ion-list [inset]="true">
       <ion-list-header>
         <ion-label>Tareas del Sistema</ion-label>
+        <ion-button (click)="createTaskForUser()" fill="solid" color="success" size="small" [disabled]="users.length === 0">
+            <ion-icon slot="start" name="add-circle-outline"></ion-icon>
+            <ion-label>Nueva</ion-label>
+        </ion-button>
         <ion-button (click)="loadAllTasks()" fill="clear" color="primary" [disabled]="isTasksLoading">
           <ion-icon slot="icon-only" [name]="isTasksLoading ? 'sync-outline' : 'refresh-outline'" [class.spin]="isTasksLoading"></ion-icon>
         </ion-button>

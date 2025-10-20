@@ -37,8 +37,16 @@ export class TaskService {
     return this.http.get<Task[]>(this.apiUrl, { params }); 
   } 
 
-  createTask(newTask: Partial<Task>): Observable<Task> { 
-    return this.http.post<Task>(this.apiUrl, newTask); 
+  /**
+   * Crea una nueva tarea. Si se proporciona 'assignToUserId', la tarea será asignada a ese usuario
+   * (Esta funcionalidad requiere permisos de admin en el backend).
+   */
+  createTask(newTask: Partial<Task>, assignToUserId?: string): Observable<Task> {
+    const body = assignToUserId 
+        ? { ...newTask, userId: assignToUserId } // Si se asigna, se añade el userId al cuerpo
+        : newTask;                             // Si no se asigna, se envía solo la tarea (comportamiento por defecto)
+
+    return this.http.post<Task>(this.apiUrl, body); 
   }
 
   updateTask(task: Task): Observable<Task> { 

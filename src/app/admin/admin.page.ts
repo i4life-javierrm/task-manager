@@ -2,7 +2,8 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule, AlertController } from '@ionic/angular';
+import { IonicModule, AlertController, ModalController } from '@ionic/angular';
+import { CreateTaskModalComponent } from './components/create-task-modal.component';
 import { AdminService } from '../services/admin.service'; 
 import { User } from '../interfaces/user.interface'; 
 import { AuthService } from '../services/auth.service'; 
@@ -24,6 +25,7 @@ export class AdminPage implements OnInit {
   private alertCtrl = inject(AlertController);
   private taskService = inject(TaskService);
   private toastService = inject(ToastService); 
+  private modalCtrl = inject(ModalController); 
   
   // ------------------------------------
   // PROPIEDADES DE ESTADO
@@ -133,6 +135,35 @@ export class AdminPage implements OnInit {
       }
     });
   }
+
+// 🌟 NUEVA FUNCIONALIDAD: Crear tarea para usuario (USANDO MODAL)
+async createTaskForUser() {
+  if (this.users.length === 0) {
+    this.toastService.showInfo('Cargando usuarios... Intente de nuevo en un momento.', 'Info');
+    this.loadUsers();
+    return;
+  }
+
+  const modal = await this.modalCtrl.create({
+      component: CreateTaskModalComponent,
+      // Pasamos la lista de usuarios al modal como un input
+      componentProps: {
+          users: this.users
+      }
+  });
+
+  await modal.present();
+
+  // Esperamos a que el modal se cierre
+  const { data, role } = await modal.onWillDismiss();
+
+  // Si el rol es 'created', significa que la tarea se creó con éxito
+  if (role === 'created') {
+      // La tarea ya fue enviada y el toast mostrado dentro del modal.
+      // Solo necesitamos recargar la lista de tareas globales
+      this.loadAllTasks(); 
+  }
+}
 
   async deleteAdminTask(task: Task) {
     const alert = await this.alertCtrl.create({

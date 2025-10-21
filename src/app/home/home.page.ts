@@ -7,6 +7,9 @@ import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router'; 
 import { ToastService } from '../services/toast.service'; 
+
+// 🆕 NUEVO: Importar el servicio de usuarios y la interfaz de Usuario (asumiendo services/user.service.ts)
+import { UserService, User } from '../services/user.service'; // <--- ASUMIMOS ESTA RUTA
  
 @Component({ 
   selector: 'app-home', 
@@ -21,19 +24,25 @@ import { ToastService } from '../services/toast.service';
 }) 
 export class HomePage implements OnInit { 
   tasks: Task[] = []; 
+  
+  // Propiedades del formulario de nueva tarea
   newTaskTitle: string = ''; 
   newTaskDescription: string = '';
   newTaskTagsInput: string = ''; 
-  isAdminUser: boolean = false; 
-
-  // 💥 ELIMINADO: filterTagInput (reemplazado por selectedTags)
   
-  // 🚀 NUEVA PROPIEDAD: Los tags seleccionados para filtrar
-  selectedTags: string[] = []; 
+  // 🚀 NUEVA PROPIEDAD: Lista de usuarios disponibles para asignar (solo si es admin)
+  availableUsers: User[] = []; 
+  // 🚀 NUEVA PROPIEDAD: IDs de usuario seleccionados en el formulario
+  selectedUserIds: string[] = []; 
 
+  isAdminUser: boolean = false; 
+  
+  selectedTags: string[] = []; 
   editingTaskId: string | null = null; 
 
   private taskService = inject(TaskService);
+  // 🆕 NUEVO: Inyección del servicio de usuarios
+  private userService = inject(UserService); 
   private authService = inject(AuthService);
   private router = inject(Router);
   private toastService = inject(ToastService);
@@ -42,13 +51,33 @@ export class HomePage implements OnInit {
   constructor() { } 
  
   ngOnInit() { 
-    this.loadTasks(); 
     this.isAdminUser = this.authService.isAdmin; 
+    this.loadTasks(); 
+    
+    // 🚀 LÓGICA GRUPAL: Solo si el usuario es administrador, carga la lista de usuarios
+    if (this.isAdminUser) {
+        this.loadUsers();
+    }
   } 
  
+  // 🆕 NUEVO MÉTODO: Cargar usuarios (solo para admins)
+  loadUsers() {
+    this.userService.getAllUsers().subscribe({
+        next: (users) => {
+            // Filtra el usuario 'admin' o el usuario actual si no quieres que se auto-asigne dos veces
+            this.availableUsers = users.filter(u => u.username.toLowerCase() !== 'admin');
+        },
+        error: (error) => {
+            console.error('Error al cargar usuarios:', error);
+            this.toastService.showError('Error al cargar la lista de usuarios.', 'Error');
+        }
+    });
+  }
+
   loadTasks() { 
     this.taskService.getTasks().subscribe({ 
       next: (tasks) => { 
+        // 💡 Importante: La interfaz Task ahora espera un array de 'users'
         this.tasks = tasks; 
       }, 
       error: (error) => { 
@@ -58,82 +87,60 @@ export class HomePage implements OnInit {
     }); 
   }
 
-  // 🚀 NUEVA PROPIEDAD CALCULADA: Genera una lista de todos los tags únicos
+  // ... (El resto de getters y métodos de filtrado se mantienen igual) ...
+
   get availableTags(): string[] {
     const nestedTags: string[][] = this.tasks
-      .map(task => task.tags || []); // Obtiene arrays de tags (string[][])
-  
-    // Solución TS2550: Usa reduce en lugar de flat() para aplanar el array.
-    // Solución TS7006/TS2322: Añade tipado explícito a las funciones.
+      .map(task => task.tags || []); 
+    
     const allTags: string[] = nestedTags
       .reduce((acc: string[], val: string[]) => acc.concat(val), [])
-      // Solución TS7006: Tipado explícito para 'tag'
       .filter((tag: string) => tag && tag.trim().length > 0); 
   
-    // Usa un Set para obtener solo los valores únicos y luego los ordena.
-    // El tipado previo garantiza que el resultado sea string[]
     return [...new Set(allTags)].sort(); 
   }
 
-  // 🚀 PROPIEDAD CALCULADA: Tareas filtradas (LÓGICA DE FILTRADO MÚLTIPLE)
   get filteredTasks(): Task[] {
-    // Si no hay tags seleccionados, devuelve todas las tareas
     if (this.selectedTags.length === 0) {
       return this.tasks;
     }
 
-    // Filtra las tareas cuya lista de tags incluya TODOS los selectedTags (AND logic)
     return this.tasks.filter(task => {
-      // Si la tarea no tiene tags, no puede contener los seleccionados
       if (!task.tags || task.tags.length === 0) {
         return false;
       }
       
-      // Comprobamos si TODOS los selectedTags están presentes en task.tags
-      // 💥 CAMBIO CLAVE: Usamos .some() en lugar de .every() para la lógica OR.
       return this.selectedTags.some(selectedTag => 
         task.tags.some(taskTag => taskTag.toLowerCase() === selectedTag.toLowerCase())
       );
     });
   }
 
-  // 🚀 PROPIEDAD CALCULADA: Tareas pendientes (basada en filteredTasks)
   get pendingTasks(): Task[] {
     return this.filteredTasks.filter(t => !t.completed);
   }
 
-  // 🚀 NUEVO MÉTODO: Alterna la selección de un tag
   toggleTagFilter(tag: string) {
     const index = this.selectedTags.indexOf(tag);
     if (index > -1) {
-      // El tag ya está seleccionado, lo quitamos
       this.selectedTags.splice(index, 1);
     } else {
-      // El tag no está seleccionado, lo añadimos
       this.selectedTags.push(tag);
     }
   }
 
-  // 🚀 NUEVO MÉTODO: Comprueba si un tag está seleccionado
   isTagSelected(tag: string): boolean {
     return this.selectedTags.includes(tag);
   }
 
-  // 🚀 NUEVO MÉTODO: Limpia el filtro
   clearTagFilter() {
     this.selectedTags = [];
   }
 
-  // --------------------------------------------------------------------------------
-  // El resto de métodos se mantienen igual...
-  // --------------------------------------------------------------------------------
-
-  // Verifica si la tarea actual está siendo editada
   isEditing(taskId: string | undefined): boolean {
     return taskId === this.editingTaskId;
   }
 
-  // Activa/Desactiva el modo de edición
   toggleEditMode(taskId: string | undefined) {
     if (!taskId) return; 
 
@@ -144,7 +151,6 @@ export class HomePage implements OnInit {
     }
   }
 
-  // Guarda la descripción actualizada de la tarea
   saveDescription(task: Task) {
     if (!task._id) {
         this.toastService.showError('No se pudo guardar: ID de tarea inválido.', 'Error');
@@ -168,7 +174,8 @@ export class HomePage implements OnInit {
     });
   }
 
-  addTask() { 
+  // 🚀 LÓGICA GRUPAL: Método addTask modificado para aceptar un array de IDs
+  async addTask() { 
     if (!this.newTaskTitle.trim()) { 
       this.toastService.showError('El título no puede estar vacío.', 'Error de Entrada');
       return; 
@@ -184,13 +191,30 @@ export class HomePage implements OnInit {
         tags: tagsArray 
     };
 
-    this.taskService.createTask(newTaskData).subscribe({ 
+    // 💡 Lógica de Asignación Grupal
+    let userIdsToAssign: string[] | undefined;
+
+    if (this.isAdminUser) {
+      // Si es administrador, enviamos los IDs seleccionados.
+      // Si el admin no seleccionó a nadie (selectedUserIds está vacío), 
+      // el array enviado es [], y el backend debería no asignar a nadie, 
+      // O: el backend debe forzar la asignación al creador si el array está vacío (¡lo haremos en el backend para seguridad!)
+      userIdsToAssign = this.selectedUserIds.length > 0 ? this.selectedUserIds : undefined;
+      // 🚨 NOTA: Para permitir que el admin cree una tarea SIN asignarla a sí mismo,
+      // simplemente no debe seleccionarse en el formulario.
+    }
+
+
+    // 💡 CAMBIO CLAVE: Enviamos el array de IDs seleccionados
+    this.taskService.createTask(newTaskData, userIdsToAssign).subscribe({ 
       next: (task) => { 
-        // 💡 Importante: Se añade a 'tasks' para que el filtro y 'availableTags' se actualicen
         this.tasks.unshift(task); 
         this.newTaskTitle = ''; 
         this.newTaskDescription = ''; 
         this.newTaskTagsInput = ''; 
+        // 💡 Limpiamos la selección de usuarios después de crear
+        this.selectedUserIds = []; 
+        this.loadTasks();
         this.toastService.showSuccess('Tarea agregada correctamente.', 'Éxito');
       }, 
       error: (error) => { 
@@ -218,6 +242,20 @@ export class HomePage implements OnInit {
         }
     });
   }
+
+  /**
+ * Convierte el array de objetos de usuario a un string separado por comas (ej: "Juan, Maria, Pedro")
+ * @param task La tarea de la que se obtendrán los nombres de usuario.
+ * @returns Un string con los nombres de usuario o '(Sin asignar)'
+ */
+getUserList(task: Task): string {
+  // 💡 SOLUCIÓN TS: Verificamos si 'users' existe y tiene elementos antes de llamar a map()
+  if (task.users && task.users.length > 0) {
+      // Utilizamos el operador Elvis opcional '?' para mayor seguridad si Task fuera undefined
+      return task.users.map(u => u.username).join(', ');
+  }
+  return '(Sin asignar)';
+}
 
   async deleteTask(task: Task) {
     const alert = await this.alertController.create({

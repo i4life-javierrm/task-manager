@@ -3,13 +3,15 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule, AlertController, ModalController } from '@ionic/angular';
-import { CreateTaskModalComponent } from './components/create-task-modal.component';
-import { AdminService } from '../services/admin.service';
-import { User } from '../interfaces/user.interface';
+
+// 💡 IMPORTANTE: Asegúrate de que esta ruta sea correcta en tu proyecto
+import { CreateTaskModalComponent } from './components/create-task-modal.component'; 
+
 import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
 import { TaskService, Task } from '../services/task.service';
 import { ToastService } from '../services/toast.service';
+import { UserService, User } from '../services/user.service'; 
 
 @Component({
   selector: 'app-admin',
@@ -19,246 +21,142 @@ import { ToastService } from '../services/toast.service';
   imports: [IonicModule, CommonModule, FormsModule],
 })
 export class AdminPage implements OnInit {
-  private adminService = inject(AdminService);
-  private authService = inject(AuthService);
+  // Inyecciones
+  private userService = inject(UserService); 
+  public authService = inject(AuthService);
   private router = inject(Router);
   private alertCtrl = inject(AlertController);
   private taskService = inject(TaskService);
   private toastService = inject(ToastService);
-  private modalCtrl = inject(ModalController);
+  private modalCtrl = inject(ModalController); 
 
   // ------------------------------------
   // PROPIEDADES DE ESTADO
   // ------------------------------------
-  private _currentView: 'users' | 'tasks' = 'users';
-  set currentView(value: 'users' | 'tasks') {
-    this._currentView = value;
-    // Carga las tareas globales la primera vez que se cambia al segmento 'tasks'
-    if (value === 'tasks' && this.allTasks.length === 0) {
-      this.loadAllTasks();
-    }
-  }
-  get currentView(): 'users' | 'tasks' {
-    return this._currentView;
-  }
-
-  users: User[] = [];
-  isLoading: boolean = false;
+  currentView: 'users' | 'tasks' = 'users'; 
+  
+  users: User[] = []; 
   allTasks: Task[] = [];
-  isTasksLoading: boolean = false;
-  private allTasksOriginal: Task[] = [];
-  availableTags: string[] = [];
-  selectedTags: string[] = [];
-
-  constructor() {}
-
-  ngOnInit() {
-    // Verificación de administrador al inicio
-    if (!this.authService.isAdmin) {
-      this.toastService.showError(
-        'Acceso no autorizado. Debe ser administrador.',
-        'Error'
-      );
-      this.router.navigateByUrl('/home');
-      return;
+  isLoadingUsers: boolean = true;
+  isLoadingTasks: boolean = true;
+  
+  // ------------------------------------
+  // LÓGICA GRUPAL: Función para obtener la lista de usuarios asignados
+  // ------------------------------------
+  /**
+   * Convierte el array de objetos de usuario a un string legible.
+   * Muestra hasta 3 nombres y el conteo restante si hay más.
+   */
+  getUserList(task: Task): string {
+    if (task.users && task.users.length > 0) {
+        const usernames = task.users.map(u => u.username);
+        if (usernames.length > 3) {
+            return usernames.slice(0, 3).join(', ') + ` y ${usernames.length - 3} más`;
+        }
+        return usernames.join(', ');
     }
-    this.loadUsers();
+    return '(Sin asignar)';
   }
-
+  
   // ------------------------------------
-  // GESTIÓN DE USUARIOS
+  // LÓGICA DE CARGA DE DATOS
   // ------------------------------------
+  ngOnInit() {
+    this.loadUsers();
+    this.loadAllTasks();
+  }
 
   loadUsers() {
-    this.isLoading = true;
-    this.adminService.getUsers().subscribe({
-      next: (data: User[]) => {
-        this.users = data;
-        this.isLoading = false;
+    this.isLoadingUsers = true;
+    this.userService.getAllUsers().subscribe({
+      next: (users) => {
+        this.users = users;
+        this.isLoadingUsers = false;
       },
-      error: (error: any) => {
-        this.isLoading = false;
+      error: (error) => {
         console.error('Error al cargar usuarios:', error);
-        this.toastService.showError(
-          'Error al cargar la lista de usuarios.',
-          'Error'
-        );
+        this.toastService.showError('Error al cargar la lista de usuarios.', 'Error');
+        this.isLoadingUsers = false;
       },
     });
   }
 
-  async deleteUser(userId: string) {
-    const userToDelete = this.users.find((u) => u._id === userId);
-
-    if (userToDelete && userToDelete.role === 'ADMIN') {
-      this.toastService.showError(
-        'No puedes eliminar una cuenta de administrador.',
-        'Advertencia'
-      );
-      return;
+  loadAllTasks() {
+    this.isLoadingTasks = true;
+    this.taskService.getTasks(true).subscribe({ 
+      next: (tasks) => {
+        this.allTasks = tasks;
+        this.isLoadingTasks = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar tareas globales:', error);
+        this.toastService.showError('Error al cargar tareas globales.', 'Error');
+        this.isLoadingTasks = false;
+      },
+    });
+  }
+  
+  // ------------------------------------
+  // LÓGICA DE GESTIÓN (USUARIOS Y TAREAS)
+  // ------------------------------------
+  async deleteUser(user: User) {
+    if (user.role === 'ADMIN') {
+        this.toastService.showError('No se puede eliminar una cuenta de administrador.', 'Error de Permisos');
+        return;
     }
-
+    
     const alert = await this.alertCtrl.create({
-      header: 'Confirmar Eliminación',
-      message: `¿Está seguro que desea eliminar la cuenta de ${userToDelete?.username}? Se eliminarán TODAS sus tareas.`,
-      buttons: [
-        { text: 'Cancelar', role: 'cancel' },
-        {
-          text: 'Eliminar',
-          cssClass: 'ion-color-danger',
-          handler: () => {
-            this.adminService.deleteUser(userId).subscribe({
-              next: () => {
-                this.users = this.users.filter((u) => u._id !== userId);
-                this.toastService.showSuccess(
-                  `Usuario eliminado con éxito y sus tareas asociadas.`,
-                  'Éxito'
-                );
-              },
-              error: (error: any) => {
-                console.error('Error al eliminar usuario:', error);
-                this.toastService.showError(
-                  `Error al eliminar usuario: ${
-                    error.error?.error || 'Error desconocido'
-                  }`,
-                  'Error'
-                );
-              },
-            });
-          },
-        },
-      ],
+        header: 'Confirmar Eliminación',
+        message: `¿Está seguro que desea eliminar el usuario **${user.username}**? Se eliminará de todas las tareas a las que pertenezca y se borrarán sus tareas individuales.`,
+        buttons: [
+            { text: 'Cancelar', role: 'cancel' },
+            {
+                text: 'Eliminar',
+                cssClass: 'ion-color-danger',
+                handler: () => {
+                    // Nota: Asumiendo que has añadido el método deleteUser en UserService
+                    this.userService.deleteUser(user._id).subscribe({ 
+                        next: () => {
+                            this.users = this.users.filter((u) => u._id !== user._id);
+                            this.loadAllTasks(); 
+                            this.toastService.showSuccess(`Usuario ${user.username} eliminado.`, 'Éxito');
+                        },
+                        error: (error: any) => {
+                            console.error('Error al eliminar usuario:', error);
+                            this.toastService.showError(`Error: ${error.error?.error || 'Error desconocido'}`, 'Error');
+                        },
+                    });
+                },
+            },
+        ],
     });
     await alert.present();
   }
-
-  // ------------------------------------
-  // GESTIÓN DE TAREAS GLOBALES
-  // ------------------------------------
-
-  loadAllTasks() {
-    this.isTasksLoading = true;
-    // El 'true' pide al servicio que añada el parámetro 'all=true' para ver todas las tareas
-    this.taskService.getTasks(true).subscribe({
-      next: (tasks: Task[]) => {
-        this.allTasksOriginal = tasks;
-        this.extractUniqueTags(tasks);
-        this.filterTasks();
-        this.isTasksLoading = false;
-        // Sólo mostrará el toast si el array no estaba previamente cargado
-        if (tasks.length > 0) {
-          this.toastService.showSuccess(
-            `Se cargaron ${tasks.length} tareas totales.`,
-            'Éxito'
-          );
-        }
-      },
-      error: (error: any) => {
-        this.isTasksLoading = false;
-        console.error('Error al cargar todas las tareas:', error);
-        this.toastService.showError(
-          `Error al cargar tareas: ${
-            error.error?.error || 'Error desconocido'
-          }`,
-          'Error'
-        );
-      },
-    });
-  }
-
-  private extractUniqueTags(tasks: Task[]) {
-    const allTags = tasks.reduce((acc, task:Task) =>{
-      return acc.concat(task.tags || []);
-    }, [] as string[]);
-    // Usamos Set para obtener valores únicos y luego convertimos a array, ordenando alfabéticamente
-    this.availableTags = Array.from(new Set(allTags)).sort();
-  }
-
-  toggleTagFilter(tag: string) {
-    const index = this.selectedTags.indexOf(tag);
-    if (index > -1) {
-      this.selectedTags.splice(index, 1); // Remover tag
-    } else {
-      this.selectedTags.push(tag); // Añadir tag
-    }
-    this.filterTasks();
-  }
-
-  filterTasks() {
-    if (this.selectedTags.length === 0) {
-      // Si no hay tags seleccionados, mostrar todas las tareas
-      this.allTasks = [...this.allTasksOriginal];
-      return;
-    }
-
-    // Filtrar tareas: solo las tareas que contengan *al menos un* tag seleccionado
-    this.allTasks = this.allTasksOriginal.filter(task => {
-      // task.tags debe tener intersección con this.selectedTags
-      return this.selectedTags.some(selectedTag => 
-        task.tags && task.tags.includes(selectedTag)
-      );
-    });
-  }
-
-  // 🌟 NUEVA FUNCIONALIDAD: Crear tarea para usuario (USANDO MODAL)
-  async createTaskForUser() {
-    if (this.users.length === 0) {
-      this.toastService.showInfo(
-        'Cargando usuarios... Intente de nuevo en un momento.',
-        'Info'
-      );
-      this.loadUsers();
-      return;
-    }
-
-    const modal = await this.modalCtrl.create({
-      component: CreateTaskModalComponent,
-      // Pasamos la lista de usuarios al modal como un input
-      componentProps: {
-        users: this.users,
-      },
-    });
-
-    await modal.present();
-
-    // Esperamos a que el modal se cierre
-    const { data, role } = await modal.onWillDismiss();
-
-    // Si el rol es 'created', significa que la tarea se creó con éxito
-    if (role === 'created') {
-      // La tarea ya fue enviada y el toast mostrado dentro del modal.
-      // Solo necesitamos recargar la lista de tareas globales
-      this.loadAllTasks();
-    }
-  }
-
+  
   async deleteAdminTask(task: Task) {
+    if (!task._id) return;
+
+    const assignedUsers = this.getUserList(task); 
+
     const alert = await this.alertCtrl.create({
-      header: 'Confirmar Eliminación de Tarea',
-      message: `¿Está seguro que desea eliminar la tarea de ${
-        task.user?.username || 'un usuario'
-      } titulada \"${task.title}\"?`,
+      header: 'Confirmar Eliminación',
+      // Muestra la lista de usuarios asignados
+      message: `¿Está seguro que desea eliminar la tarea de \"${assignedUsers}\" titulada \"${task.title}\"?`, 
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
         {
           text: 'Eliminar',
           cssClass: 'ion-color-danger',
           handler: () => {
-            // El servicio de tareas se encarga de usar el permiso de admin para borrar
             this.taskService.deleteTask(task._id!).subscribe({
               next: () => {
                 this.allTasks = this.allTasks.filter((t) => t._id !== task._id);
-                this.toastService.showSuccess(
-                  `Tarea eliminada con éxito.`,
-                  'Éxito'
-                );
+                this.toastService.showSuccess(`Tarea eliminada con éxito.`, 'Éxito');
               },
               error: (error: any) => {
                 console.error('Error al eliminar tarea:', error);
                 this.toastService.showError(
-                  `Error al eliminar tarea: ${
-                    error.error?.error || 'Error desconocido'
-                  }`,
+                  `Error al eliminar tarea: ${error.error?.error || 'Error desconocido'}`,
                   'Error'
                 );
               },
@@ -271,7 +169,29 @@ export class AdminPage implements OnInit {
   }
 
   // ------------------------------------
-  // 💥 FUNCIÓN FALTANTE: LOGOUT
+  // 🚀 FUNCIÓN DE MODAL (DESCOMENTADA)
+  // ------------------------------------
+  async openCreateTaskModal() {
+    const modal = await this.modalCtrl.create({
+      // 💡 Asumimos que este componente existe y está importado
+      component: CreateTaskModalComponent, 
+      componentProps: {
+        users: this.users 
+      }
+    });
+    
+    // Si el modal se cierra con el rol 'created', recarga las tareas
+    modal.onDidDismiss().then((result) => {
+      if (result.role === 'created') {
+        this.loadAllTasks();
+      }
+    });
+    
+    return await modal.present();
+  }
+  
+  // ------------------------------------
+  // FUNCIÓN DE NAVEGACIÓN
   // ------------------------------------
   logout() {
     this.authService.logout();

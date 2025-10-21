@@ -1,3 +1,4 @@
+// File: src/app/services/auth.service.ts (MODIFICADO)
 import { Injectable } from '@angular/core'; 
 import { HttpClient } from '@angular/common/http'; 
 import { BehaviorSubject, Observable } from 'rxjs'; 
@@ -20,12 +21,33 @@ export class AuthService {
     return !!localStorage.getItem(this.TOKEN_KEY); 
   }
 
-  // 💥 FIX: Propiedad GET (sin paréntesis) - Usado en AdminPage y HomePage
+  // 💥 NUEVO: Función auxiliar para decodificar el payload del JWT
+  private decodeTokenPayload(token: string): any {
+    try {
+        // Un JWT tiene el formato header.payload.signature
+        const payload = token.split('.')[1];
+        // Decodificación Base64 y parseo a JSON
+        return JSON.parse(atob(payload));
+    } catch (e) {
+        // Manejar token mal formado o decodificación fallida
+        return null;
+    }
+  }
+
+  // 🚀 NUEVA PROPIEDAD: Obtiene el ID del usuario actual
+  get currentUserId(): string | null {
+    const token = localStorage.getItem(this.TOKEN_KEY);
+    if (!token) return null;
+
+    const decoded = this.decodeTokenPayload(token);
+    // Asumimos que el payload del token tiene la propiedad 'userId' (lo que genera el backend)
+    return decoded ? decoded.userId : null; 
+  }
+
   get isAdmin(): boolean {
     return localStorage.getItem(this.ROLE_KEY) === 'ADMIN';
   }
 
-  // 💥 FIX: Nuevo método para obtener el token - Usado en auth-guard
   getToken(): string | null {
     return localStorage.getItem(this.TOKEN_KEY);
   }
@@ -42,17 +64,18 @@ export class AuthService {
         localStorage.setItem(this.ROLE_KEY, response.role); 
         this.authState.next(true); 
       }) 
-    ); 
-  } 
-  
+    );
+  }
+
   logout() { 
     localStorage.removeItem(this.TOKEN_KEY); 
     localStorage.removeItem(this.ROLE_KEY); 
     this.authState.next(false); 
-    this.router.navigateByUrl('/login');
+    // No redirigimos aquí; el componente que lo llama maneja la navegación.
   }
 
-  isAuthenticated(): Observable<boolean> {
-    return this.authState.asObservable();
+  isAuthenticated(): Observable<boolean> { 
+    return this.authState.asObservable(); 
   }
+
 }

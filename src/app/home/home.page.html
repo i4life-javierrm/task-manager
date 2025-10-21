@@ -39,6 +39,20 @@
           ></ion-input>
         </ion-item>
         
+        <ion-item *ngIf="isAdminUser && availableUsers.length > 0">
+          <ion-label position="stacked">Asignar a Usuarios (Múltiple)</ion-label>
+          <ion-select 
+            placeholder="Selecciona usuarios" 
+            interface="popover" 
+            multiple="true" 
+            [(ngModel)]="selectedUserIds"
+            class="custom-select"
+          >
+            @for (user of availableUsers; track user._id) {
+                <ion-select-option [value]="user._id">{{ user.username }}</ion-select-option>
+            }
+          </ion-select>
+        </ion-item>
         <ion-button expand="block" class="ion-margin-top" (click)="addTask()" [disabled]="!newTaskTitle.trim()">
           <ion-icon name="add-circle-outline" slot="start"></ion-icon>
           Añadir Tarea
@@ -91,6 +105,12 @@
           <ion-label>
             <h2>{{ task.title }}</h2>
             
+            <p class="members-text">
+              Asignada a: 
+              <span>
+                  {{ getUserList(task) }}
+              </span>
+          </p>
             <p class="date-text">
               Creada: {{ task.createdAt | date: 'shortDate' }}
             </p>

@@ -260,7 +260,7 @@ getUserList(task: Task): string {
   async deleteTask(task: Task) {
     const alert = await this.alertController.create({
       header: 'Confirmar Eliminación',
-      message: `¿Está seguro que desea eliminar la tarea \"${task.title}\"? Esta acción no se puede deshacer.`,
+      message: `¿Está seguro que desea mover la tarea \"${task.title}\" a la papelera?`,
       buttons: [
         {
           text: 'Cancelar',
@@ -271,7 +271,7 @@ getUserList(task: Task): string {
           text: 'Eliminar',
           cssClass: 'ion-color-danger', 
           handler: () => {
-            this.taskService.deleteTask(task._id!).subscribe({
+            this.taskService.moveToTrash(task._id!).subscribe({
               next: () => { 
                 this.tasks = this.tasks.filter(t => t._id !== task._id);
                 this.toastService.showSuccess('Tarea eliminada correctamente.', 'Eliminación Exitosa');

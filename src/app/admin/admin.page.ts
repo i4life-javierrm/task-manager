@@ -141,14 +141,14 @@ export class AdminPage implements OnInit {
     const alert = await this.alertCtrl.create({
       header: 'Confirmar Eliminación',
       // Muestra la lista de usuarios asignados
-      message: `¿Está seguro que desea eliminar la tarea de \"${assignedUsers}\" titulada \"${task.title}\"?`, 
+      message: `¿Está seguro que desea mover la tarea de \"${assignedUsers}\" titulada \"${task.title}\" a la papelera?`, 
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
         {
           text: 'Eliminar',
           cssClass: 'ion-color-danger',
           handler: () => {
-            this.taskService.deleteTask(task._id!).subscribe({
+            this.taskService.moveToTrash(task._id!).subscribe({
               next: () => {
                 this.allTasks = this.allTasks.filter((t) => t._id !== task._id);
                 this.toastService.showSuccess(`Tarea eliminada con éxito.`, 'Éxito');

@@ -1,0 +1,79 @@
+/* Estilos específicos para la página de la Papelera (TrashPage) */
+
+ion-content {
+    --background: var(--ion-color-light); // Fondo claro para la lista
+}
+
+/* ----------------------------------------------------
+ * 1. Estilo del mensaje de papelera vacía
+ * ---------------------------------------------------- */
+.ion-text-center {
+    padding-top: 20vh; // Centrar verticalmente el contenido
+    
+    ion-icon {
+        font-size: 5rem;
+        margin-bottom: 10px;
+        color: var(--ion-color-medium);
+    }
+    
+    h2 {
+        color: var(--ion-color-dark);
+        font-weight: 600;
+        margin-top: 10px;
+    }
+    
+    p {
+        color: var(--ion-color-medium-shade);
+    }
+}
+
+/* ----------------------------------------------------
+ * 2. Estilos de los ítems en la lista
+ * ---------------------------------------------------- */
+ion-item {
+    // Fondo ligeramente diferente para distinguir de las páginas activas
+    --background: var(--ion-color-light-shade); 
+    border-left: 5px solid var(--ion-color-medium); // Borde para indicar estado "muerto"
+    margin-bottom: 5px;
+    
+    ion-label {
+        h2 {
+            font-weight: bold;
+            color: var(--ion-color-medium-shade); // Título grisáceo
+            text-decoration: line-through; // Tachado para simular eliminación
+            opacity: 0.8;
+        }
+        
+        p {
+            color: var(--ion-color-medium);
+            text-decoration: line-through; // Descripción también tachada
+            font-size: 0.9em;
+        }
+        
+        ion-note {
+            display: block; // La nota de la fecha va en su propia línea
+            padding-top: 5px;
+            color: var(--ion-color-medium-tint) !important;
+        }
+    }
+    
+    // Icono de inicio (el de "cerrar")
+    ion-icon[slot="start"] {
+        font-size: 1.5rem;
+        color: var(--ion-color-danger); // Mantenemos el rojo para indicar peligro/eliminación
+    }
+}
+
+/* ----------------------------------------------------
+ * 3. Estilos de las opciones de Swipe
+ * ---------------------------------------------------- */
+
+// Restaurar (side="start")
+ion-item-option[color="success"] {
+    background: var(--ion-color-success);
+}
+
+// Eliminar Permanentemente (side="end")
+ion-item-option[color="danger"] {
+    background: var(--ion-color-danger);
+}

@@ -29,13 +29,24 @@ const routes: Routes = [
       )
   },
   // -----------------------------------------------------------
-  // 💥 ADMIN ROUTE: Referencia al nuevo AdminPage_v2
+  // 💥 ADMIN ROUTE
   // -----------------------------------------------------------
   {
     path: 'admin',
     loadComponent: () => 
       import('./admin/admin.page').then(m => 
-        m.AdminPage // El nombre de la clase sigue siendo AdminPage
+        m.AdminPage
+      ),
+    canActivate: [authGuard]
+  },
+  // -----------------------------------------------------------
+  // 🗑️ RUTA DE PAPELERA (TRASH) - Paso 9
+  // -----------------------------------------------------------
+  {
+    path: 'trash', // La ruta de navegación será /trash
+    loadComponent: () => 
+      import('./trash/trash.page').then(m => // Carga el componente TrashPage
+        m.TrashPage
       ),
     canActivate: [authGuard]
   }

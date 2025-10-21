@@ -302,4 +302,10 @@ getUserList(task: Task): string {
   goToAdmin() {
     this.router.navigateByUrl('/admin');
   }
+
+  // 🗑️ NUEVO MÉTODO: Navega a la vista de papelera
+  goToTrash() {
+    // La ruta '/trash' ya fue definida en app-routing.module.ts
+    this.router.navigateByUrl('/trash'); 
+  }
 }

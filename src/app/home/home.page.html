@@ -2,10 +2,16 @@
   <ion-toolbar>
     <ion-title>Lista de Tareas</ion-title>
 
-    <ion-buttons slot="primary" *ngIf="isAdminUser">
-      <ion-button (click)="goToAdmin()">
+    <ion-buttons slot="primary">
+      
+      <ion-button (click)="goToAdmin()" *ngIf="isAdminUser">
         <ion-icon name="shield-half-outline" slot="icon-only" color="primary"></ion-icon>
       </ion-button>
+      
+      <ion-button (click)="goToTrash()" color="medium">
+        <ion-icon name="trash-bin-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+      
     </ion-buttons>
 
     <ion-buttons slot="end">
@@ -163,7 +169,7 @@
             >
               <ion-icon 
                 [name]="isEditing(task._id) ? 'close-circle-outline' : 'create-outline'" 
-                slot="icon-only"
+                slot="icon-only'"
               ></ion-icon>
             </ion-button>
 

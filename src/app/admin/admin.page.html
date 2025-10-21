@@ -24,6 +24,9 @@
       <ion-segment-button value="tasks">
         <ion-label>Tareas Globales ({{ allTasks.length }})</ion-label>
       </ion-segment-button>
+      <ion-segment-button value="trashedTasks">
+        <ion-label>Papelera ({{ trashedTasks.length }})</ion-label>
+      </ion-segment-button>
     </ion-segment>
   </ion-toolbar>
 </ion-header>
@@ -123,4 +126,67 @@
       }
     </ion-list>
   </div>
+
+  <div *ngIf="currentView === 'trashedTasks'">
+    <ion-list [inset]="true">
+      <ion-list-header>
+        <ion-label>Tareas en Papelera</ion-label>
+        
+        <ion-button (click)="loadTrashedTasks()" fill="clear">
+          <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
+        </ion-button>
+      </ion-list-header>
+
+      <ion-item *ngIf="isLoadingTrashedTasks">
+        <ion-spinner slot="start"></ion-spinner>
+        <ion-label>Cargando tareas de la papelera...</ion-label>
+      </ion-item>
+      
+      @for (task of trashedTasks; track task._id) {
+        <ion-item class="admin-task-item" detail="false">
+          <ion-icon slot="start" name="trash-bin-outline" color="danger"></ion-icon>
+
+          <ion-label class="ion-text-wrap">
+            <h2>{{ task.title }} (Papelera)</h2>
+
+            <div class="task-tags">
+              <ion-chip *ngFor="let tag of task.tags" size="small" color="secondary">
+                <ion-label>{{ tag }}</ion-label>
+              </ion-chip>
+            </div>
+            
+            <p class="task-owner">
+              Asignada a: 
+              <span class="username-text">
+                {{ getUserList(task) }}
+              </span>
+            </p>
+            
+            <p class="task-description">{{ task.description || 'Sin descripción' }}</p>
+          </ion-label>
+
+          <div slot="end" class="ion-text-end">
+             <ion-button 
+              size="small" 
+              fill="outline" 
+              color="primary" 
+              (click)="restoreTask(task)"
+            >
+              <ion-icon slot="icon-only" name="refresh-circle-outline"></ion-icon>
+            </ion-button>
+            
+            <ion-button 
+              size="small" 
+              fill="solid" 
+              color="danger" 
+              (click)="deleteTaskPermanent(task)"
+            >
+              <ion-icon slot="icon-only" name="skull-outline"></ion-icon>
+            </ion-button>
+          </div>
+        </ion-item>
+      }
+    </ion-list>
+  </div>
+
 </ion-content>

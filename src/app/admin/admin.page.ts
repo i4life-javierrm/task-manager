@@ -33,12 +33,18 @@ export class AdminPage implements OnInit {
   // ------------------------------------
   // PROPIEDADES DE ESTADO
   // ------------------------------------
-  currentView: 'users' | 'tasks' = 'users'; 
+  // 🔄 ¡Añadido 'trashedTasks' a los posibles valores!
+  currentView: 'users' | 'tasks' | 'trashedTasks' = 'users'; 
   
   users: User[] = []; 
   allTasks: Task[] = [];
+  // 🗑️ Nueva propiedad para las tareas en la papelera
+  trashedTasks: Task[] = []; 
+  
   isLoadingUsers: boolean = true;
   isLoadingTasks: boolean = true;
+  // 🗑️ Nueva propiedad de estado de carga
+  isLoadingTrashedTasks: boolean = true;
   
   // ------------------------------------
   // LÓGICA GRUPAL: Función para obtener la lista de usuarios asignados
@@ -64,6 +70,7 @@ export class AdminPage implements OnInit {
   ngOnInit() {
     this.loadUsers();
     this.loadAllTasks();
+    this.loadTrashedTasks(); // 🗑️ Cargar tareas en papelera al inicio
   }
 
   loadUsers() {
@@ -83,6 +90,7 @@ export class AdminPage implements OnInit {
 
   loadAllTasks() {
     this.isLoadingTasks = true;
+    // Carga tareas activas globales
     this.taskService.getTasks(true).subscribe({ 
       next: (tasks) => {
         this.allTasks = tasks;
@@ -92,6 +100,24 @@ export class AdminPage implements OnInit {
         console.error('Error al cargar tareas globales:', error);
         this.toastService.showError('Error al cargar tareas globales.', 'Error');
         this.isLoadingTasks = false;
+      },
+    });
+  }
+  
+  /**
+   * 🗑️ Carga todas las tareas que han sido movidas a la papelera (isTrashed: true).
+   */
+  loadTrashedTasks() {
+    this.isLoadingTrashedTasks = true;
+    this.taskService.getTrashedTasks(true).subscribe({
+      next: (tasks) => {
+        this.trashedTasks = tasks;
+        this.isLoadingTrashedTasks = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar tareas en papelera:', error);
+        this.toastService.showError('Error al cargar tareas de la papelera.', 'Error');
+        this.isLoadingTrashedTasks = false;
       },
     });
   }
@@ -145,18 +171,90 @@ export class AdminPage implements OnInit {
       buttons: [
         { text: 'Cancelar', role: 'cancel' },
         {
-          text: 'Eliminar',
+          text: 'Mover a Papelera',
           cssClass: 'ion-color-danger',
           handler: () => {
             this.taskService.moveToTrash(task._id!).subscribe({
               next: () => {
                 this.allTasks = this.allTasks.filter((t) => t._id !== task._id);
-                this.toastService.showSuccess(`Tarea eliminada con éxito.`, 'Éxito');
+                this.loadTrashedTasks(); // Recargar la papelera
+                this.toastService.showSuccess(`Tarea movida a la papelera.`, 'Éxito');
               },
               error: (error: any) => {
-                console.error('Error al eliminar tarea:', error);
+                console.error('Error al mover tarea a papelera:', error);
                 this.toastService.showError(
-                  `Error al eliminar tarea: ${error.error?.error || 'Error desconocido'}`,
+                  `Error al mover tarea: ${error.error?.error || 'Error desconocido'}`,
+                  'Error'
+                );
+              },
+            });
+          },
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  /**
+   * 🗑️ Muestra un diálogo de confirmación y restaura la tarea desde la papelera.
+   */
+  async restoreTask(task: Task) {
+    if (!task._id) return;
+
+    const alert = await this.alertCtrl.create({
+      header: 'Confirmar Restauración',
+      message: `¿Está seguro que desea **restaurar** la tarea \"${task.title}\"?`,
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        {
+          text: 'Restaurar',
+          handler: () => {
+            this.taskService.restoreTask(task._id!).subscribe({
+              next: () => {
+                this.trashedTasks = this.trashedTasks.filter((t) => t._id !== task._id);
+                this.loadAllTasks(); // Recargar tareas activas
+                this.toastService.showSuccess(`Tarea \"${task.title}\" restaurada con éxito.`, 'Éxito');
+              },
+              error: (error: any) => {
+                console.error('Error al restaurar tarea:', error);
+                this.toastService.showError(
+                  `Error al restaurar tarea: ${error.error?.error || 'Error desconocido'}`,
+                  'Error'
+                );
+              },
+            });
+          },
+        },
+      ],
+    });
+    await alert.present();
+  }
+  
+  /**
+   * ❌ Muestra un diálogo de confirmación y elimina la tarea PERMANENTEMENTE.
+   */
+  async deleteTaskPermanent(task: Task) {
+    if (!task._id) return;
+
+    const alert = await this.alertCtrl.create({
+      header: 'ELIMINACIÓN PERMANENTE',
+      subHeader: `¡Esta acción no se puede deshacer!`,
+      message: `¿Está **ABSOLUTAMENTE SEGURO** de que desea eliminar PERMANENTEMENTE la tarea \"${task.title}\"?`,
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        {
+          text: 'Eliminar Permanentemente',
+          cssClass: 'ion-color-danger',
+          handler: () => {
+            this.taskService.deleteTaskPermanent(task._id!).subscribe({
+              next: () => {
+                this.trashedTasks = this.trashedTasks.filter((t) => t._id !== task._id);
+                this.toastService.showSuccess(`Tarea eliminada PERMANENTEMENTE.`, 'Éxito');
+              },
+              error: (error: any) => {
+                console.error('Error al eliminar tarea permanentemente:', error);
+                this.toastService.showError(
+                  `Error al eliminar: ${error.error?.error || 'Error desconocido'}`,
                   'Error'
                 );
               },
@@ -169,7 +267,7 @@ export class AdminPage implements OnInit {
   }
 
   // ------------------------------------
-  // 🚀 FUNCIÓN DE MODAL (DESCOMENTADA)
+  // 🚀 FUNCIÓN DE MODAL
   // ------------------------------------
   async openCreateTaskModal() {
     const modal = await this.modalCtrl.create({

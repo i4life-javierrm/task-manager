@@ -1,0 +1,52 @@
+<ion-header>
+    <ion-toolbar>
+        <ion-buttons slot="start">
+            <ion-back-button defaultHref="/home" (click)="goToHome()"></ion-back-button>
+        </ion-buttons>
+        <ion-title>Notificaciones</ion-title>
+        
+        <ion-buttons slot="end">
+            <ion-button (click)="loadNotifications()">
+                <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
+            </ion-button>
+        </ion-buttons>
+        </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+    <ion-header collapse="condense">
+        <ion-toolbar>
+            <ion-title size="large">Notificaciones</ion-title>
+        </ion-toolbar>
+    </ion-header>
+
+    <ion-list *ngIf="notifications.length > 0; else noNotifications">
+        <ion-item-sliding *ngFor="let notification of notifications">
+            <ion-item>
+                <ion-label>
+                    <h2>Notificación de eliminación</h2>
+                    <p>{{ notification.message }}</p>
+                    <p *ngIf="notification.task">Tarea asociada: {{ notification.task.title }}</p>
+                </ion-label>
+            </ion-item>
+
+            <ion-item-options side="end">
+                <ion-item-option color="success" (click)="acceptNotification(notification)">
+                    <ion-icon slot="icon-only" name="checkmark-circle-outline"></ion-icon>
+                </ion-item-option>
+                <ion-item-option color="danger" (click)="dismissNotification(notification)">
+                    <ion-icon slot="icon-only" name="close-circle-outline"></ion-icon>
+                </ion-item-option>
+            </ion-item-options>
+        </ion-item-sliding>
+    </ion-list>
+
+    <ng-template #noNotifications>
+        <div class="ion-padding ion-text-center">
+            <ion-text color="medium">
+                <p>No tienes notificaciones pendientes. ✨</p>
+            </ion-text>
+        </div>
+    </ng-template>
+
+</ion-content>

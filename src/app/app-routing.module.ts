@@ -49,6 +49,13 @@ const routes: Routes = [
         m.TrashPage
       ),
     canActivate: [authGuard]
+  },
+  {
+    path: 'notifications',
+    loadComponent: () =>
+      import('./notification/notification.page').then(m =>
+        m.NotificationPage
+      )
   }
 ];
 

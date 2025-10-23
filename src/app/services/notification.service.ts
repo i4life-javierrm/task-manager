@@ -4,8 +4,8 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface Notification {
-    _id?:String,
-    message?:String,
+    _id?:string,
+    message?:string,
     user:{username:string,_id:string},
     task:{title:string,_id:string}
 }

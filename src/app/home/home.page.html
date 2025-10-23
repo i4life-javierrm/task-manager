@@ -7,6 +7,9 @@
       <ion-button (click)="goToAdmin()" *ngIf="isAdminUser">
         <ion-icon name="shield-half-outline" slot="icon-only" color="primary"></ion-icon>
       </ion-button>
+      <ion-button (click)="goToNotifications()" *ngIf="!isAdminUser">
+        <ion-icon name="mail-outline" slot="icon-only" color="primary"></ion-icon>
+      </ion-button>
       
       <ion-button (click)="goToTrash()" color="medium">
         <ion-icon name="trash-bin-outline" slot="icon-only"></ion-icon>

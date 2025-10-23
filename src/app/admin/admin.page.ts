@@ -11,6 +11,7 @@ import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
 import { TaskService, Task } from '../services/task.service';
 import { ToastService } from '../services/toast.service';
+import { NotificationService } from '../services/notification.service';
 import { UserService, User } from '../services/user.service'; 
 
 @Component({
@@ -28,6 +29,7 @@ export class AdminPage implements OnInit {
   private alertCtrl = inject(AlertController);
   private taskService = inject(TaskService);
   private toastService = inject(ToastService);
+  private notificationService = inject(NotificationService)
   private modalCtrl = inject(ModalController); 
 
   // ------------------------------------
@@ -236,6 +238,14 @@ export class AdminPage implements OnInit {
   async deleteTaskPermanent(task: Task) {
     if (!task._id) return;
 
+    if (!(task.users!.length>1))
+    {
+      let message = ''
+      
+      this.notificationService.createNotification({message:message,user:task.users![0]._id,task:task._id}).subscribe()
+    }
+    else
+    {
     const alert = await this.alertCtrl.create({
       header: 'ELIMINACIÓN PERMANENTE',
       subHeader: `¡Esta acción no se puede deshacer!`,
@@ -264,6 +274,8 @@ export class AdminPage implements OnInit {
       ],
     });
     await alert.present();
+    }
+    
   }
 
   // ------------------------------------

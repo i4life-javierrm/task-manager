@@ -18,7 +18,9 @@ export interface Task {
   isTrashed: boolean; 
   
   // 💡 CAMBIO DE 'user' A 'users': Ahora es un array de usuarios poblados
-  users?: { username: string; _id: string }[]; 
+  users?: {
+    role: string; username: string; _id: string 
+}[]; 
   tags: string[];
 } 
 

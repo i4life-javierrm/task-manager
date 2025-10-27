@@ -238,7 +238,9 @@ export class AdminPage implements OnInit {
   async deleteTaskPermanent(task: Task) {
     if (!task._id) return;
 
-    if (!(task.users!.length>1))
+    const users = task.users;
+
+    if (users && users.length>0) if (users.length===1) if (users[0].role==='USER')
     {
       let message = ''
       
